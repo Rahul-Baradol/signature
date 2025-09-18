@@ -1,19 +1,23 @@
-import React, { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
+import Particles from "./Particles";
 
 export default function BeatVisualizer() {
-  const [file, setFile] = useState(null);
+  const [file, setFile] = useState<File | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [beatIntensity, setBeatIntensity] = useState(0);
 
-  const audioRef = useRef(null);
-  const audioCtxRef = useRef(null);
-  const sourceRef = useRef(null);
-  const analyserRef = useRef(null);
-  const dataArrayRef = useRef(null);
+  const [beatIntensity, setBeatIntensity] = useState({
+    prev: 0,
+    current: 0
+  });
+
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const dataArrayRef = useRef<Uint8Array | null>(null);
 
   useEffect(() => {
     if (file && !isPlaying) {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const audioCtx = new (window.AudioContext || window.AudioContext)();
       audioCtxRef.current = audioCtx;
 
       const reader = new FileReader();
@@ -34,31 +38,14 @@ export default function BeatVisualizer() {
 
         const analyser = offlineCtx.createAnalyser();
         analyser.fftSize = 512;
-        const bufferLength = analyser.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
 
         source.connect(analyser);
         analyser.connect(offlineCtx.destination);
 
         source.start();
 
-        // const renderedBuffer = await offlineCtx.startRendering();
-
-        // // Scan through rendered audio
-        // let min = Infinity, max = -Infinity;
-        // const step = 1024; // step through samples
-        // const channelData = renderedBuffer.getChannelData(0);
-
-        // for (let i = 0; i < channelData.length; i += step) {
-        //   analyser.getByteFrequencyData(dataArray);
-        //   let avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-        //   avg /= 255;
-        //   min = Math.min(min, avg);
-        //   max = Math.max(max, avg);
-        // }
-
         const preScan = async (file: File): Promise<{ min: number; max: number }> => {
-          const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          const audioCtx = new (window.AudioContext || window.AudioContext)();
           const arrayBuffer = await file.arrayBuffer();
           const decodedData = await audioCtx.decodeAudioData(arrayBuffer);
 
@@ -104,8 +91,11 @@ export default function BeatVisualizer() {
           liveAnalyser.getByteFrequencyData(liveData);
           let avg = liveData.reduce((a, b) => a + b, 0) / liveData.length;
           avg /= 255;
-          const normalized = (avg - min) / (max - min);
-          setBeatIntensity(normalized);
+          const normalized = ((avg - min) / (max - min));
+          setBeatIntensity((prev) => ({
+            prev: prev.current,
+            current: normalized,
+          }));
           requestAnimationFrame(detectBeat);
         };
 
@@ -116,33 +106,40 @@ export default function BeatVisualizer() {
     }
   }, [file, isPlaying]);
 
-  useEffect(() => {
-    console.log(beatIntensity)
-  }, [beatIntensity])
-
   return (
     <div
       className="w-screen h-screen flex items-center justify-center transition-colors duration-200"
       style={{
         background: `radial-gradient(circle at center, 
-          rgba(255, 0, 150, ${0.1 + beatIntensity * 0.9}) 0%, 
-          rgba(0, 100, 255, ${0.1 + beatIntensity * 0.9}) 100%)`,
+          rgba(255, 0, 150, ${0.1 + beatIntensity.current * 0.9}) 0%, 
+          rgba(0, 100, 255, ${0.1 + beatIntensity.current * 0.9}) 100%)`,
       }}
     >
       {!file ? (
-        <label className="cursor-pointer text-white text-xl bg-black/40 px-6 py-3 rounded-lg shadow-lg">
-          Upload MP3
-          <input
-            type="file"
-            accept="audio/mp3"
-            className="hidden"
-            onChange={(e) => setFile(e.target.files[0])}
-          />
-        </label>
+        <>
+
+          <label className="cursor-pointer text-white text-xl bg-black/40 px-6 py-3 rounded-lg shadow-lg">
+            Upload MP3
+            <input
+              type="file"
+              accept="audio/mp3"
+              className="hidden"
+              onChange={(e) => {
+                if (e.target.files && e.target.files[0]) {
+                  setFile(e.target.files[0]);
+                }
+              }}
+            />
+          </label>
+          {/* <Particles beatIntensity={beatIntensity} /> */}
+        </>
       ) : (
-        <h1 className="text-white text-5xl font-bold drop-shadow-lg">
-          signature
-        </h1>
+        <>
+          <h1 className="text-white text-5xl font-bold drop-shadow-lg">
+            signature
+          </h1>
+          <Particles beatIntensity={beatIntensity} />
+        </>
       )}
     </div>
   );
