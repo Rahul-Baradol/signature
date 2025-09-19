@@ -45,9 +45,9 @@ class Particle {
 
     update() {
         if (this.pushDirection === 1) {
-            this.y -= Math.abs(this.vyUp) * 6 * this.beatIntensity;
+            this.y -= Math.abs(this.vyUp) * 20 * this.beatIntensity;
         } else {
-            this.y += Math.abs(this.vyDown) * 6 * (1 - this.beatIntensity)
+            this.y += Math.abs(this.vyDown) * 12 * (1 - this.beatIntensity)
         }
     }
 
@@ -111,13 +111,22 @@ const Particles = ({ beatIntensity }: { beatIntensity: any }) => {
 
     useEffect(() => {
         const randomIndices = new Set<number>();
-        while (randomIndices.size < Math.min(50, particles.current.length)) {
+        const pushDirection = (beatIntensity.current > (0.75 * beatIntensity.prev)) ? 1 : -1;
+
+        let countOfParticlesToAffect;
+        if (pushDirection == 1) {
+            countOfParticlesToAffect = Math.min(50 + Math.floor(beatIntensity.current * 150), particles.current.length);
+        } else {
+            countOfParticlesToAffect = particles.current.length;
+        }
+
+        while (randomIndices.size < countOfParticlesToAffect) {
             randomIndices.add(Math.floor(Math.random() * particles.current.length));
         }
 
         particles.current.forEach((p, index) => {
             if (randomIndices.has(index)) {
-                p.pushDirection = beatIntensity.current > (0.6 * beatIntensity.prev) ? 1 : -1;
+                p.pushDirection = pushDirection;
                 p.beatIntensity = beatIntensity.current;
             }
         });

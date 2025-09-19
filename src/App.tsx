@@ -106,32 +106,35 @@ export default function BeatVisualizer() {
     }
   }, [file, isPlaying]);
 
+  useEffect(() => {
+    console.log("Beat Intensity Updated: ", beatIntensity.current, beatIntensity.prev);
+  }, [beatIntensity])
+
   return (
     <div
       className="w-screen h-screen flex items-center justify-center transition-colors duration-200"
       style={{
         background: `radial-gradient(circle at center, 
-          rgba(255, 0, 150, ${0.1 + beatIntensity.current * 0.9}) 0%, 
-          rgba(0, 100, 255, ${0.1 + beatIntensity.current * 0.9}) 100%)`,
+          rgba(255, 255, 0, ${beatIntensity.current}) 0%, 
+          rgba(0, 0, 0, ${beatIntensity.current}) 100%)`,
       }}
     >
       {!file ? (
         <>
 
-          <label className="cursor-pointer text-white text-xl bg-black/40 px-6 py-3 rounded-lg shadow-lg">
+            <label className="cursor-pointer text-white text-xl bg-black/40 px-6 py-3 rounded-lg shadow-lg">
             Upload MP3
             <input
               type="file"
               accept="audio/mp3"
               className="hidden"
               onChange={(e) => {
-                if (e.target.files && e.target.files[0]) {
-                  setFile(e.target.files[0]);
-                }
+              if (e.target.files && e.target.files[0]) {
+                setFile(e.target.files[0]);
+              }
               }}
             />
-          </label>
-          {/* <Particles beatIntensity={beatIntensity} /> */}
+            </label>
         </>
       ) : (
         <>
