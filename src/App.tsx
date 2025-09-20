@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, use } from "react";
 import Particles from "./Particles";
 import { SlMusicToneAlt } from "react-icons/sl";
 import { MdOutlineFileUpload } from "react-icons/md";
@@ -19,6 +19,8 @@ export default function BeatVisualizer() {
   const audioCtxRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const dataArrayRef = useRef<Uint8Array | null>(null);
+
+  const [historyOfIntensities, setHistoryOfIntensities] = useState<number[]>([]);
 
   useEffect(() => {
     if (file && !isPlaying) {
@@ -49,31 +51,31 @@ export default function BeatVisualizer() {
 
         source.start();
 
-        const preScan = async (file: File): Promise<{ min: number; max: number }> => {
-          const audioCtx = new (window.AudioContext || window.AudioContext)();
-          const arrayBuffer = await file.arrayBuffer();
-          const decodedData = await audioCtx.decodeAudioData(arrayBuffer);
+        // const preScan = async (file: File): Promise<{ min: number; max: number }> => {
+        //   const audioCtx = new (window.AudioContext || window.AudioContext)();
+        //   const arrayBuffer = await file.arrayBuffer();
+        //   const decodedData = await audioCtx.decodeAudioData(arrayBuffer);
 
-          const channelData = decodedData.getChannelData(0); // use first channel
-          const step = 1024; // sample every N samples
-          let min = Infinity;
-          let max = -Infinity;
+        //   const channelData = decodedData.getChannelData(0); // use first channel
+        //   const step = 1024; // sample every N samples
+        //   let min = Infinity;
+        //   let max = -Infinity;
 
-          for (let i = 0; i < channelData.length; i += step) {
-            let sum = 0;
-            for (let j = 0; j < step && i + j < channelData.length; j++) {
-              sum += channelData[i + j] ** 2; // square -> energy
-            }
-            const rms = Math.sqrt(sum / step); // root mean square
-            min = Math.min(min, rms);
-            max = Math.max(max, rms);
-          }
+        //   for (let i = 0; i < channelData.length; i += step) {
+        //     let sum = 0;
+        //     for (let j = 0; j < step && i + j < channelData.length; j++) {
+        //       sum += channelData[i + j] ** 2; // square -> energy
+        //     }
+        //     const rms = Math.sqrt(sum / step); // root mean square
+        //     min = Math.min(min, rms);
+        //     max = Math.max(max, rms);
+        //   }
 
-          return { min, max };
-        };
+        //   return { min, max };
+        // };
 
-        const { min, max } = await preScan(file);
-        console.log("Pre-scan results: ", { min, max });
+        // const { min, max } = await preScan(file);
+        // console.log("Pre-scan results: ", { min, max });
 
         // --- Now start actual playback ---
         const audio = new Audio(URL.createObjectURL(file));
@@ -92,15 +94,79 @@ export default function BeatVisualizer() {
         audio.play();
         setIsPlaying(true);
 
+        function rmsRange(arr: any, start: number, end: number) {
+          let sumSq = 0;
+          for (let i = Math.floor(start); i < Math.floor(end); i++) {
+            sumSq += arr[i] * arr[i];
+          }
+          return Math.sqrt(sumSq / (Math.floor(end) - Math.floor(start)));
+        }
+
         const detectBeat = () => {
           liveAnalyser.getByteFrequencyData(liveData);
-          let avg = liveData.reduce((a, b) => a + b, 0) / liveData.length;
-          avg /= 255;
-          const normalized = ((avg - min) / (max - min));
-          setBeatIntensity((prev) => ({
-            prev: prev.current,
-            current: normalized,
-          }));
+
+          // console.log(liveData.length)
+
+          const lowCount = Math.floor(liveData.length * 0.5);
+          const midCount = Math.floor(liveData.length * 0.30);
+
+          const avgLow = rmsRange(liveData, 0, lowCount);
+          const avgMid = rmsRange(liveData, lowCount, lowCount + midCount);
+          const avgHigh = rmsRange(liveData, lowCount + midCount, liveData.length);
+
+          // let avgLow = 0, avgMid = 0, avgHigh = 0;
+          // const lowCount = Math.floor(liveData.length * 0.25);
+          // const midCount = Math.floor(liveData.length * 0.5);
+          // const highCount = liveData.length - lowCount - midCount;
+
+          // for (let i = 0; i < lowCount; i++) {
+          //   avgLow += liveData[i];
+          // }
+          // avgLow /= lowCount;
+
+          // for (let i = lowCount; i < lowCount + midCount; i++) {
+          //   avgMid += liveData[i];
+          // }
+          // avgMid /= midCount;
+
+          // for (let i = lowCount + midCount; i < liveData.length; i++) {
+          //   avgHigh += liveData[i];
+          // }
+          // avgHigh /= highCount;
+
+          // let avg = (avgLow * 0.5) + (avgMid * 0.3) + (avgHigh * 0.2);
+          // avg /= 255;
+
+          let eff = liveData.reduce((a, b) => a + b, 0) / liveData.length / 255;
+
+          // let eff = Math.max(avgLow, avgMid, avgHigh) / 255;
+
+          let avg = eff;
+          if (historyOfIntensities.length == 60) {
+            let minIntensity = Math.min(...historyOfIntensities);
+            let maxIntensity = Math.max(...historyOfIntensities);
+
+            avg = (eff - minIntensity) / (maxIntensity - minIntensity);
+            avg = Math.min(Math.max(avg, 0), 1);
+          }
+
+          setBeatIntensity((prev) => {
+            const pushDirection = (avg > prev.current) ? 1 : -1;
+
+            return {
+              prev: prev.current,
+              current: (pushDirection * 0.075 * avg) + avg
+            }
+          });
+
+          setHistoryOfIntensities((prev) => {
+            const updated = [...prev, eff];
+            if (updated.length > 60) {
+              updated.shift();
+            }
+            return updated;
+          });
+
           requestAnimationFrame(detectBeat);
         };
 
@@ -112,15 +178,22 @@ export default function BeatVisualizer() {
   }, [file, isPlaying]);
 
   useEffect(() => {
+    // if (beatIntensity.current) {
+    //   setMinIntensity((prev) => Math.min(prev, beatIntensity.current));
+    //   setMaxIntensity((prev) => Math.max(prev, beatIntensity.current));
+    // }
+
+    console.log(beatIntensity.current)
+
     if (musicRef.current) {
-      const scale = 1 + (beatIntensity.current * 1.5);
+      const scale = 1 + (beatIntensity.current * 2.5);
       musicRef.current.style.transform = `scale(${scale})`;
     }
 
     if (backgroundRef.current) {
       const intensity = Math.min(beatIntensity.current, 0.7);
 
-      let r , g, b;
+      let r, g, b;
       r = Math.round(140 * intensity);
       g = Math.round(100 * intensity);
       b = 255;
@@ -130,6 +203,19 @@ export default function BeatVisualizer() {
         rgba(0, 0, 0, ${Math.min(intensity * 2, 1)}) 100%)`;
     }
   }, [beatIntensity])
+
+  useEffect(() => {
+    // console.log(historyOfIntensities.length)
+    console.log({
+      length: historyOfIntensities.length,
+      min: Math.min(...historyOfIntensities),
+      max: Math.max(...historyOfIntensities)
+    })
+  }, [historyOfIntensities])
+
+  // useEffect(() => {
+  //   console.log({ minIntensity, maxIntensity });
+  // }, [minIntensity, maxIntensity])
 
   return (
     <div
