@@ -6,7 +6,7 @@ import Particles from './Particles'
 export default function BeatVisualizer() {
   const [file, setFile] = useState<File | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-
+  const [youtubeUrl, setYoutubeUrl] = useState("");
   const [beatIntensity, setBeatIntensity] = useState({
     prev: 0,
     current: 0
@@ -16,6 +16,26 @@ export default function BeatVisualizer() {
   const audioCtxRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const dataArrayRef = useRef<Uint8Array | null>(null);
+
+  const handleYoutubeDownload = async () => {
+    if (!youtubeUrl) return;
+
+    try {
+      const response = await fetch(`${process.env.API_URL}/download-audio?url=${encodeURIComponent(youtubeUrl)}`);
+
+      if (!response.ok) {
+        throw new Error("Failed to download audio");
+      }
+
+      const data = await response.json();
+      const buffer = new Uint8Array(atob(data.buffer).split("").map((char) => char.charCodeAt(0)));
+      const blob = new Blob([buffer], { type: "audio/mp3" });
+      const file = new File([blob], "downloaded.mp3", { type: "audio/mp3" });
+      setFile(file);
+    } catch (error) {
+      console.error("Error downloading audio:", error);
+    }
+  };
 
   useEffect(() => {
     if (file && !isPlaying) {
@@ -114,7 +134,7 @@ export default function BeatVisualizer() {
 
   return (
     <div
-      className="w-screen h-screen flex items-center justify-center transition-colors duration-200"
+      className="w-screen h-screen flex flex-col items-center justify-center transition-colors duration-200"
       style={{
         background: `radial-gradient(circle at center, 
           rgba(255, 255, 0, ${beatIntensity.current}) 0%, 
@@ -123,20 +143,34 @@ export default function BeatVisualizer() {
     >
       {!file ? (
         <>
-
-            <label className="cursor-pointer text-white text-xl bg-black/40 px-6 py-3 rounded-lg shadow-lg">
+          <label className="cursor-pointer text-white text-xl bg-black/40 px-6 py-3 rounded-lg shadow-lg">
             Upload MP3
             <input
               type="file"
               accept="audio/mp3"
               className="hidden"
               onChange={(e) => {
-              if (e.target.files && e.target.files[0]) {
-                setFile(e.target.files[0]);
-              }
+                if (e.target.files && e.target.files[0]) {
+                  setFile(e.target.files[0]);
+                }
               }}
             />
-            </label>
+          </label>
+          <div className="mt-4">
+            <input
+              type="text"
+              placeholder="Enter YouTube URL"
+              value={youtubeUrl}
+              onChange={(e) => setYoutubeUrl(e.target.value)}
+              className="px-4 py-2 rounded-lg shadow-lg"
+            />
+            <button
+              onClick={handleYoutubeDownload}
+              className="ml-2 px-4 py-2 bg-blue-500 text-white rounded-lg shadow-lg"
+            >
+              Download
+            </button>
+          </div>
         </>
       ) : (
         <>

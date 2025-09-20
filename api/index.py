@@ -3,24 +3,23 @@ from fastapi.responses import JSONResponse
 import yt_dlp
 import base64
 import requests
-
-app = FastAPI()
-
-from fastapi import FastAPI, Query
-from fastapi.responses import JSONResponse
-import yt_dlp
-import base64
 import io
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Accept all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods
+    allow_headers=["*"],  # Allow all headers
+)
 
 @app.get("/download-audio")
 async def download_audio(url: str = Query(..., description="YouTube video URL")):
-    buffer = io.BytesIO()
-
     ydl_opts = {
         "format": "bestaudio/best",
-        "outtmpl": "-",
         "quiet": True,
         "noplaylist": True,
         "extract_audio": True,
@@ -31,27 +30,16 @@ async def download_audio(url: str = Query(..., description="YouTube video URL"))
             "preferredcodec": "mp3",
             "preferredquality": "192",
         }],
-        "logtostderr": False,
-        "progress_hooks": [],
-        "nopart": True,
-        "buffersize": 16 * 1024,
-        "outtmpl": "-",
-        "force_overwrites": True,
+        "outtmpl": "audio",
     }
 
-    # Use yt_dlp to download audio into memory
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(url, download=False)
-        audio_url = info["url"]
+        ydl.download([url])
 
-        # Download binary data
-        
-        resp = requests.get(audio_url, stream=True)
-        for chunk in resp.iter_content(chunk_size=8192):
-            buffer.write(chunk)
+    # Read the audio file and encode it as base64
+    with open("audio.mp3", "rb") as audio_file:
+        audio_data = audio_file.read()
+        encoded_audio = base64.b64encode(audio_data).decode("utf-8")
 
-    buffer.seek(0)
-    encoded = base64.b64encode(buffer.read()).decode("utf-8")
-
-    return JSONResponse(content={"buffer": encoded})
-
+    # Return the base64-encoded audio data
+    return JSONResponse(content={"buffer": encoded_audio})
