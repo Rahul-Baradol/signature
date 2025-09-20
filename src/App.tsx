@@ -1,9 +1,14 @@
 import { useRef, useState, useEffect } from "react";
 import Particles from "./Particles";
+import { SlMusicToneAlt } from "react-icons/sl";
+import { MdOutlineFileUpload } from "react-icons/md";
+
 
 export default function BeatVisualizer() {
   const [file, setFile] = useState<File | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const musicRef = useRef<HTMLDivElement>(null);
+  const backgroundRef = useRef<HTMLDivElement>(null);
 
   const [beatIntensity, setBeatIntensity] = useState({
     prev: 0,
@@ -107,40 +112,52 @@ export default function BeatVisualizer() {
   }, [file, isPlaying]);
 
   useEffect(() => {
-    console.log("Beat Intensity Updated: ", beatIntensity.current, beatIntensity.prev);
+    if (musicRef.current) {
+      const scale = 1 + (beatIntensity.current * 1.5);
+      musicRef.current.style.transform = `scale(${scale})`;
+    }
+
+    if (backgroundRef.current) {
+      const intensity = Math.min(beatIntensity.current, 0.7);
+
+      let r , g, b;
+      r = Math.round(140 * intensity);
+      g = Math.round(100 * intensity);
+      b = 255;
+
+      backgroundRef.current.style.background = `radial-gradient(circle at center, 
+        rgba(${r}, ${g}, ${b}, ${Math.min(intensity * 2, 1)}) 0%, 
+        rgba(0, 0, 0, ${Math.min(intensity * 2, 1)}) 100%)`;
+    }
   }, [beatIntensity])
 
   return (
     <div
+      ref={backgroundRef}
       className="w-screen h-screen flex items-center justify-center transition-colors duration-200"
-      style={{
-        background: `radial-gradient(circle at center, 
-          rgba(255, 255, 0, ${beatIntensity.current}) 0%, 
-          rgba(0, 0, 0, ${beatIntensity.current}) 100%)`,
-      }}
     >
       {!file ? (
-        <>
-
-            <label className="cursor-pointer text-white text-xl bg-black/40 px-6 py-3 rounded-lg shadow-lg">
-            Upload MP3
+        <div className="flex flex-col items-center gap-2">
+          <div>MP3 file please...</div>
+          <label className="cursor-pointer text-white text-xl bg-black/40 px-6 py-3 rounded-lg shadow-lg">
+            <MdOutlineFileUpload />
             <input
               type="file"
               accept="audio/mp3"
               className="hidden"
               onChange={(e) => {
-              if (e.target.files && e.target.files[0]) {
-                setFile(e.target.files[0]);
-              }
+                if (e.target.files && e.target.files[0]) {
+                  setFile(e.target.files[0]);
+                }
               }}
             />
-            </label>
-        </>
+          </label>
+        </div>
       ) : (
         <>
-          <h1 className="text-white text-5xl font-bold drop-shadow-lg">
-            signature
-          </h1>
+          <div ref={musicRef} className={`w-[50px] h-[50px] transition-all`}>
+            <SlMusicToneAlt className="w-full h-full" />
+          </div>
           <Particles beatIntensity={beatIntensity} />
         </>
       )}
