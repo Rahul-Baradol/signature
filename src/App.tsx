@@ -97,9 +97,9 @@ export default function BeatVisualizer() {
         function rmsRange(arr: any, start: number, end: number) {
           let sumSq = 0;
           for (let i = Math.floor(start); i < Math.floor(end); i++) {
-            sumSq += arr[i] * arr[i];
+            sumSq += arr[i];
           }
-          return Math.sqrt(sumSq / (Math.floor(end) - Math.floor(start)));
+          return sumSq / (end - start)
         }
 
         const detectBeat = () => {
@@ -137,9 +137,9 @@ export default function BeatVisualizer() {
           // let avg = (avgLow * 0.5) + (avgMid * 0.3) + (avgHigh * 0.2);
           // avg /= 255;
 
-          let eff = liveData.reduce((a, b) => a + b, 0) / liveData.length / 255;
+          // let eff = liveData.reduce((a, b) => a + b, 0) / liveData.length / 255;
 
-          // let eff = Math.max(avgLow, avgMid, avgHigh) / 255;
+          let eff = Math.max(avgLow, avgMid, avgHigh) / 255;
 
           let avg = eff;
           if (historyOfIntensities.length == 60) {
