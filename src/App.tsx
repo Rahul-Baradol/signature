@@ -3,7 +3,6 @@ import Particles from "./Particles";
 import { SlMusicToneAlt } from "react-icons/sl";
 import { MdOutlineFileUpload } from "react-icons/md";
 
-
 export default function BeatVisualizer() {
   const [file, setFile] = useState<File | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -51,32 +50,6 @@ export default function BeatVisualizer() {
 
         source.start();
 
-        // const preScan = async (file: File): Promise<{ min: number; max: number }> => {
-        //   const audioCtx = new (window.AudioContext || window.AudioContext)();
-        //   const arrayBuffer = await file.arrayBuffer();
-        //   const decodedData = await audioCtx.decodeAudioData(arrayBuffer);
-
-        //   const channelData = decodedData.getChannelData(0); // use first channel
-        //   const step = 1024; // sample every N samples
-        //   let min = Infinity;
-        //   let max = -Infinity;
-
-        //   for (let i = 0; i < channelData.length; i += step) {
-        //     let sum = 0;
-        //     for (let j = 0; j < step && i + j < channelData.length; j++) {
-        //       sum += channelData[i + j] ** 2; // square -> energy
-        //     }
-        //     const rms = Math.sqrt(sum / step); // root mean square
-        //     min = Math.min(min, rms);
-        //     max = Math.max(max, rms);
-        //   }
-
-        //   return { min, max };
-        // };
-
-        // const { min, max } = await preScan(file);
-        // console.log("Pre-scan results: ", { min, max });
-
         // --- Now start actual playback ---
         const audio = new Audio(URL.createObjectURL(file));
         audioRef.current = audio;
@@ -105,39 +78,12 @@ export default function BeatVisualizer() {
         const detectBeat = () => {
           liveAnalyser.getByteFrequencyData(liveData);
 
-          // console.log(liveData.length)
-
           const lowCount = Math.floor(liveData.length * 0.5);
           const midCount = Math.floor(liveData.length * 0.30);
 
           const avgLow = rmsRange(liveData, 0, lowCount);
           const avgMid = rmsRange(liveData, lowCount, lowCount + midCount);
           const avgHigh = rmsRange(liveData, lowCount + midCount, liveData.length);
-
-          // let avgLow = 0, avgMid = 0, avgHigh = 0;
-          // const lowCount = Math.floor(liveData.length * 0.25);
-          // const midCount = Math.floor(liveData.length * 0.5);
-          // const highCount = liveData.length - lowCount - midCount;
-
-          // for (let i = 0; i < lowCount; i++) {
-          //   avgLow += liveData[i];
-          // }
-          // avgLow /= lowCount;
-
-          // for (let i = lowCount; i < lowCount + midCount; i++) {
-          //   avgMid += liveData[i];
-          // }
-          // avgMid /= midCount;
-
-          // for (let i = lowCount + midCount; i < liveData.length; i++) {
-          //   avgHigh += liveData[i];
-          // }
-          // avgHigh /= highCount;
-
-          // let avg = (avgLow * 0.5) + (avgMid * 0.3) + (avgHigh * 0.2);
-          // avg /= 255;
-
-          // let eff = liveData.reduce((a, b) => a + b, 0) / liveData.length / 255;
 
           let eff = Math.max(avgLow, avgMid, avgHigh) / 255;
 
@@ -178,13 +124,6 @@ export default function BeatVisualizer() {
   }, [file, isPlaying]);
 
   useEffect(() => {
-    // if (beatIntensity.current) {
-    //   setMinIntensity((prev) => Math.min(prev, beatIntensity.current));
-    //   setMaxIntensity((prev) => Math.max(prev, beatIntensity.current));
-    // }
-
-    console.log(beatIntensity.current)
-
     if (musicRef.current) {
       const scale = 1 + (beatIntensity.current * 2.5);
       musicRef.current.style.transform = `scale(${scale})`;
@@ -203,19 +142,6 @@ export default function BeatVisualizer() {
         rgba(0, 0, 0, ${Math.min(intensity * 2, 1)}) 100%)`;
     }
   }, [beatIntensity])
-
-  useEffect(() => {
-    // console.log(historyOfIntensities.length)
-    console.log({
-      length: historyOfIntensities.length,
-      min: Math.min(...historyOfIntensities),
-      max: Math.max(...historyOfIntensities)
-    })
-  }, [historyOfIntensities])
-
-  // useEffect(() => {
-  //   console.log({ minIntensity, maxIntensity });
-  // }, [minIntensity, maxIntensity])
 
   return (
     <div
