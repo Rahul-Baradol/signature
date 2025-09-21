@@ -151,7 +151,7 @@ export default function BeatVisualizer() {
 
         backgroundColorString += ` rgba(${r}, ${g}, ${b}, ${Math.min(intensity * 2, 1)}) ${Math.round((index / amps.length) * 140)}%,`
       });
-      backgroundColorString += " rgba(0, 0, 0, 1) 140%)";
+      backgroundColorString += " rgba(0, 0, 0, 0) 140%)";
       backgroundRef.current.style.background = backgroundColorString;
     }
   }, [backgroundRef, beatIntensity])
@@ -159,13 +159,16 @@ export default function BeatVisualizer() {
   return (
     <div
       ref={backgroundRef}
-      className="w-screen h-screen flex items-center justify-center transition-all relative bg-black"
+      className="w-screen h-screen flex items-center justify-center transition-all relative"
     >
       {!file ? (
-        <div className="flex flex-col items-center gap-2 bg-transparent">
-          <div className="text-[15px]">MP3 file please...</div>
-          <label className="cursor-pointer text-white text-[30px] bg-black px-6 py-3 rounded-lg shadow-lg">
-            <MdOutlineFileUpload/>
+        <div className="items-center gap-2 bg-transparent">
+          <h1 className="text-white text-4xl font-bold mb-6 text-center p-4">
+            Love music ?
+          </h1>
+          <label className="cursor-pointer text-white text-[30px] px-6 py-3 w-full h-full flex flex-row-reverse items-center justify-center gap-2 border-2 border-gray-400 rounded-lg">
+            <div className="text-[15px]">MP3...</div>
+            <MdOutlineFileUpload />
             <input
               type="file"
               accept="audio/mp3"
@@ -176,6 +179,7 @@ export default function BeatVisualizer() {
                 }
               }}
             />
+            
           </label>
         </div>
       ) : (
