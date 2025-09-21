@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, use } from "react";
+import { useRef, useState, useEffect } from "react";
 import Particles from "./Particles";
 import { SlMusicToneAlt } from "react-icons/sl";
 import { MdOutlineFileUpload } from "react-icons/md";
@@ -23,6 +23,8 @@ export default function BeatVisualizer() {
   const dataArrayRef = useRef<Uint8Array | null>(null);
 
   const [historyOfIntensities, setHistoryOfIntensities] = useState<number[]>([]);
+
+  const [amps, setAmps] = useState<number[]>([]);
 
   useEffect(() => {
     if (file && !isPlaying) {
@@ -81,6 +83,12 @@ export default function BeatVisualizer() {
         const detectBeat = () => {
           liveAnalyser.getByteFrequencyData(liveData);
 
+          setAmps(
+            Array.from({ length: liveData.length / 2 }, (_, i) =>
+              (liveData[i * 2] + liveData[i * 2 + 1]) / 2
+            )
+          );
+
           const lowCount = Math.floor(liveData.length * 0.5);
           const midCount = Math.floor(liveData.length * 0.30);
 
@@ -133,29 +141,31 @@ export default function BeatVisualizer() {
     }
 
     if (backgroundRef.current) {
-      const intensity = Math.min(beatIntensity.current, 0.7);
+      let backgroundColorString = "radial-gradient(circle at center,";
+      amps.forEach((amp, index) => {
+        const intensity = amp / 255;
+        let r, g, b;
+        r = Math.round(140 * intensity);
+        g = Math.round(100 * intensity);
+        b = 255;
 
-      let r, g, b;
-      r = Math.round(140 * intensity);
-      g = Math.round(100 * intensity);
-      b = 255;
-
-      backgroundRef.current.style.background = `radial-gradient(circle at center, 
-        rgba(${r}, ${g}, ${b}, ${Math.min(intensity * 2, 1)}) 0%, 
-        rgba(0, 0, 0, ${Math.min(intensity * 2, 1)}) 100%)`;
+        backgroundColorString += ` rgba(${r}, ${g}, ${b}, ${Math.min(intensity * 2, 1)}) ${Math.round((index / amps.length) * 100)}%,`
+      });
+      backgroundColorString += " rgba(0, 0, 0, 1) 100%)";
+      backgroundRef.current.style.background = backgroundColorString;
     }
-  }, [beatIntensity])
+  }, [backgroundRef, beatIntensity])
 
   return (
     <div
       ref={backgroundRef}
-      className="w-screen h-screen flex items-center justify-center transition-colors duration-200 relative"
+      className="w-screen h-screen flex items-center justify-center transition-all relative bg-black"
     >
       {!file ? (
-        <div className="flex flex-col items-center gap-2">
-          <div>MP3 file please...</div>
-          <label className="cursor-pointer text-white text-xl bg-black/40 px-6 py-3 rounded-lg shadow-lg">
-            <MdOutlineFileUpload />
+        <div className="flex flex-col items-center gap-2 bg-transparent">
+          <div className="text-[15px]">MP3 file please...</div>
+          <label className="cursor-pointer text-white text-[30px] bg-black px-6 py-3 rounded-lg shadow-lg">
+            <MdOutlineFileUpload/>
             <input
               type="file"
               accept="audio/mp3"
@@ -169,12 +179,12 @@ export default function BeatVisualizer() {
           </label>
         </div>
       ) : (
-        <>
-          <div ref={musicRef} className={`w-[50px] h-[50px] transition-all`}>
+        <div className="bg-transparent">
+          <div ref={musicRef} className={`w-[50px] h-[50px] transition-all duration-750 ease-out`}>
             <SlMusicToneAlt className="w-full h-full" />
           </div>
           <Particles beatIntensity={beatIntensity} />
-        </>
+        </div>
       )}
 
       <div className='absolute top-5 right-5 flex flex-col gap-4'>
