@@ -2,6 +2,9 @@ import { useRef, useState, useEffect, use } from "react";
 import Particles from "./Particles";
 import { SlMusicToneAlt } from "react-icons/sl";
 import { MdOutlineFileUpload } from "react-icons/md";
+import github from '../public/github.png'
+import linkedin from '../public/linkedin2.png'
+import portfolio from '../public/me.svg'
 
 export default function BeatVisualizer() {
   const [file, setFile] = useState<File | null>(null);
@@ -146,7 +149,7 @@ export default function BeatVisualizer() {
   return (
     <div
       ref={backgroundRef}
-      className="w-screen h-screen flex items-center justify-center transition-colors duration-200"
+      className="w-screen h-screen flex items-center justify-center transition-colors duration-200 relative"
     >
       {!file ? (
         <div className="flex flex-col items-center gap-2">
@@ -173,6 +176,37 @@ export default function BeatVisualizer() {
           <Particles beatIntensity={beatIntensity} />
         </>
       )}
+
+      <div className='absolute top-5 right-5 flex flex-col gap-4'>
+        <a href="https://rahulbaradol.in" target='_blank' className={`
+                  border-2 border-violet-600 opacity-50 hover:opacity-100 transition-opacity w-fit h-fit rounded-full overflow-hidden`}>
+          <img
+            width={35}
+            height={35}
+            src={portfolio}
+            alt=""
+          />
+        </a>
+
+        <a href="https://github.com/Rahul-Baradol" target='_blank' className={`border-2 border-violet-600 opacity-50 hover:opacity-100 transition-opacity w-fit h-fit rounded-full overflow-hidden`}>
+          <img
+            width={35}
+            height={35}
+            src={github}
+            alt=""
+          />
+        </a>
+
+        <a href="https://www.linkedin.com/in/rahul-baradol-22723b289/" target='_blank' className={`
+                  border-2 border-violet-600 opacity-50 hover:opacity-100 transition-opacity w-fit h-fit rounded-full overflow-hidden`}>
+          <img
+            width={35}
+            height={35}
+            src={linkedin}
+            alt=""
+          />
+        </a>
+      </div>
     </div>
   );
 }
