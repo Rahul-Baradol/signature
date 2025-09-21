@@ -84,8 +84,8 @@ export default function BeatVisualizer() {
           liveAnalyser.getByteFrequencyData(liveData);
 
           setAmps(
-            Array.from({ length: liveData.length / 2 }, (_, i) =>
-              (liveData[i * 2] + liveData[i * 2 + 1]) / 2
+            Array.from({ length: liveData.length / 4 }, (_, i) =>
+              (liveData[i * 4] + liveData[i * 4 + 1] + liveData[i * 4 + 2] + liveData[i * 4 + 3]) / 4
             )
           );
 
@@ -149,9 +149,9 @@ export default function BeatVisualizer() {
         g = Math.round(100 * intensity);
         b = 255;
 
-        backgroundColorString += ` rgba(${r}, ${g}, ${b}, ${Math.min(intensity * 2, 1)}) ${Math.round((index / amps.length) * 100)}%,`
+        backgroundColorString += ` rgba(${r}, ${g}, ${b}, ${Math.min(intensity * 2, 1)}) ${Math.round((index / amps.length) * 140)}%,`
       });
-      backgroundColorString += " rgba(0, 0, 0, 1) 100%)";
+      backgroundColorString += " rgba(0, 0, 0, 1) 140%)";
       backgroundRef.current.style.background = backgroundColorString;
     }
   }, [backgroundRef, beatIntensity])
