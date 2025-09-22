@@ -163,7 +163,7 @@ export default function BeatVisualizer() {
       className="w-screen h-screen flex flex-col gap-5 items-center justify-center transition-all relative"
     >
       {!file ? (
-        <div className="bg-transparent">
+        <div className="bg-transparent flex flex-col items-center gap-5">
           <label className="cursor-pointer text-white text-[30px] px-6 py-3 w-full h-full flex flex-row-reverse items-center justify-center gap-2 border-2 border-gray-400 rounded-lg">
             <div className="text-[15px]">Upload MP3 ( to visualize )</div>
             <MdOutlineFileUpload />
@@ -177,8 +177,8 @@ export default function BeatVisualizer() {
                 }
               }}
             />
-
           </label>
+          <Terms />
         </div>
       ) : (
         <div className="bg-transparent">
@@ -219,8 +219,6 @@ export default function BeatVisualizer() {
           />
         </a>
       </div>
-      
-      <Terms />
     </div>
   );
 }
