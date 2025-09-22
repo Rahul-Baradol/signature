@@ -168,7 +168,7 @@ export default function BeatVisualizer() {
             <MdOutlineFileUpload />
             <input
               type="file"
-              accept="audio/mp3"
+              accept="audio/mpeg, audio/mp3, .mp3"
               className="hidden"
               onChange={(e) => {
                 if (e.target.files && e.target.files[0]) {
