@@ -6,6 +6,7 @@ import github from '../public/github.png'
 import linkedin from '../public/linkedin2.png'
 import portfolio from '../public/me.svg'
 import Terms from "./Terms";
+import SeizureAlert from "./SeizureAlert";
 
 export default function BeatVisualizer() {
   const [acceptedTerms, setAcceptedTerms] = useState(
@@ -230,6 +231,10 @@ export default function BeatVisualizer() {
           />
         </a>
       </div>
+
+      { 
+        (acceptedTerms) ? <SeizureAlert /> : <></>
+      }
     </div>
   );
 }
