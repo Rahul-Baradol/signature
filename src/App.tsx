@@ -212,7 +212,7 @@ export default function BeatVisualizer() {
           />
         </a>
 
-        <a href="https://github.com/Rahul-Baradol" target='_blank' className={`border-2 border-violet-600 opacity-50 hover:opacity-100 transition-opacity w-fit h-fit rounded-full overflow-hidden`}>
+        <a href="https://github.com/Rahul-Baradol/signature" target='_blank' className={`border-2 border-violet-600 opacity-50 hover:opacity-100 transition-opacity w-fit h-fit rounded-full overflow-hidden`}>
           <img
             width={35}
             height={35}
