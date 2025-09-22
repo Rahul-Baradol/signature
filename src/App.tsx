@@ -5,6 +5,7 @@ import { MdOutlineFileUpload } from "react-icons/md";
 import github from '../public/github.png'
 import linkedin from '../public/linkedin2.png'
 import portfolio from '../public/me.svg'
+import Terms from "./Terms";
 
 export default function BeatVisualizer() {
   const [file, setFile] = useState<File | null>(null);
@@ -159,7 +160,7 @@ export default function BeatVisualizer() {
   return (
     <div
       ref={backgroundRef}
-      className="w-screen h-screen flex items-center justify-center transition-all relative"
+      className="w-screen h-screen flex flex-col gap-5 items-center justify-center transition-all relative"
     >
       {!file ? (
         <div className="bg-transparent">
@@ -218,6 +219,8 @@ export default function BeatVisualizer() {
           />
         </a>
       </div>
+      
+      <Terms />
     </div>
   );
 }
