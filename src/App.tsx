@@ -8,6 +8,12 @@ import portfolio from '../public/me.svg'
 import Terms from "./Terms";
 
 export default function BeatVisualizer() {
+  const [acceptedTerms, setAcceptedTerms] = useState(
+    localStorage.getItem('acceptedTerms') === 'true'
+  );
+
+  const [isModalVisible, setIsModalVisible] = useState(true);
+
   const [file, setFile] = useState<File | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const musicRef = useRef<HTMLDivElement>(null);
@@ -164,21 +170,26 @@ export default function BeatVisualizer() {
     >
       {!file ? (
         <div className="bg-transparent flex flex-col items-center gap-5">
-          <label className="cursor-pointer text-white text-[30px] px-6 py-3 w-full h-full flex flex-row-reverse items-center justify-center gap-2 border-2 border-gray-400 rounded-lg">
-            <div className="text-[15px]">Upload MP3 ( to visualize )</div>
-            <MdOutlineFileUpload />
-            <input
-              type="file"
-              accept="audio/mpeg, audio/mp3, .mp3"
-              className="hidden"
-              onChange={(e) => {
-                if (e.target.files && e.target.files[0]) {
-                  setFile(e.target.files[0]);
-                }
-              }}
-            />
-          </label>
-          <Terms />
+          {
+            acceptedTerms ? <label className="cursor-pointer text-white text-[30px] px-6 py-3 w-full h-full flex flex-row-reverse items-center justify-center gap-2 border-2 border-gray-400 rounded-lg">
+              <div className="text-[15px]">Upload MP3 ( to visualize )</div>
+              <MdOutlineFileUpload />
+              <input
+                type="file"
+                accept="audio/mpeg, audio/mp3, .mp3"
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    setFile(e.target.files[0]);
+                  }
+                }}
+              />
+            </label> : <></>
+          }
+
+          {
+            (!acceptedTerms) ? <Terms isModalVisible={isModalVisible} setIsModalVisible={setIsModalVisible} setAcceptedTerms={setAcceptedTerms} /> : <></>
+          }
         </div>
       ) : (
         <div className="bg-transparent">

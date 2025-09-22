@@ -1,13 +1,21 @@
-import React, { useState } from "react";
+import React from "react";
 
-const Terms: React.FC = () => {
-    const [isModalVisible, setIsModalVisible] = useState(false);
+interface TermsProps {
+    isModalVisible: boolean;
+    setIsModalVisible: React.Dispatch<React.SetStateAction<boolean>>;
+    setAcceptedTerms: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+const Terms: React.FC<TermsProps> = ({ isModalVisible, setIsModalVisible, setAcceptedTerms }) => {
 
     const showModal = () => {
         setIsModalVisible(true);
     };
 
-    const handleCancel = () => {
+    
+    const handleAccept = () => {
+        setAcceptedTerms(true);
+        localStorage.setItem('acceptedTerms', 'true');
         setIsModalVisible(false);
     };
 
@@ -101,9 +109,9 @@ const Terms: React.FC = () => {
                         <div className="flex justify-end mt-5">
                             <button
                                 className="text-white px-4 py-2 rounded transition"
-                                onClick={handleCancel}
+                                onClick={handleAccept}
                             >
-                                Cancel
+                                Accept
                             </button>
                         </div>
                     </div>
