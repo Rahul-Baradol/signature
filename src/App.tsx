@@ -204,6 +204,7 @@ export default function BeatVisualizer() {
         backgroundRef.current.style.background = "";
       }
     };
+
   }, [file, amps, beatIntensity])
 
   return (

@@ -43,7 +43,15 @@ class Particle {
         this.beatIntensity = 1;
     }
 
-    update() {
+    update() { 
+        if (this.beatIntensity <= 0.25) {
+            this.context.fillStyle = `rgba(255, 255, 255, ${this.alpha})`;
+        } else if (this.beatIntensity <= 0.75) {
+            this.context.fillStyle = `rgba(255, 150, 75, ${this.alpha})`;
+        } else {
+            this.context.fillStyle = `rgba(255, 100, 0, ${this.alpha})`;
+        }
+
         if (this.pushDirection === 1) {
             this.y -= Math.abs(this.vyUp) * 20 * this.beatIntensity;
         } else {
@@ -52,7 +60,6 @@ class Particle {
     }
 
     draw() {
-        this.context.fillStyle = `rgba(255, 255, 255, ${this.alpha})`;
         this.context.beginPath();
         this.context.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         this.context.fill();
