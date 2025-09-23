@@ -1,7 +1,10 @@
 import { useRef, useState, useEffect } from "react";
 import Particles from "./Particles";
-import { SlMusicToneAlt } from "react-icons/sl";
 import { MdOutlineFileUpload } from "react-icons/md";
+import { CiPause1 } from "react-icons/ci";
+
+import { FiPlay } from "react-icons/fi";
+
 import github from '../public/github.png'
 import linkedin from '../public/linkedin2.png'
 import portfolio from '../public/me.svg'
@@ -11,6 +14,10 @@ import SeizureAlert from "./SeizureAlert";
 export default function BeatVisualizer() {
   const [acceptedTerms, setAcceptedTerms] = useState(
     localStorage.getItem('acceptedTerms') === 'true'
+  );
+
+  const [dismissedSeizureAlert, setDismissedSeizureAlert] = useState(
+    localStorage.getItem('dismissedSeizureAlert') === 'true'
   );
 
   const [isModalVisible, setIsModalVisible] = useState(true);
@@ -35,7 +42,7 @@ export default function BeatVisualizer() {
   const [amps, setAmps] = useState<number[]>([]);
 
   useEffect(() => {
-    if (file && !isPlaying) {
+    if (file) {
       const audioCtx = new (window.AudioContext || window.AudioContext)();
       audioCtxRef.current = audioCtx;
 
@@ -140,11 +147,11 @@ export default function BeatVisualizer() {
 
       reader.readAsArrayBuffer(file);
     }
-  }, [file, isPlaying]);
+  }, [file]);
 
   useEffect(() => {
     if (musicRef.current) {
-      const scale = 1 + (beatIntensity.current * 2.5);
+      const scale = 1 + (beatIntensity.current * 1.4);
       musicRef.current.style.transform = `scale(${scale})`;
     }
 
@@ -157,7 +164,7 @@ export default function BeatVisualizer() {
         g = Math.round(100 * intensity);
         b = 255;
 
-        backgroundColorString += ` rgba(${r}, ${g}, ${b}, ${Math.min(intensity * 2, 1)}) ${Math.round((index / amps.length) * 140)}%,`
+        backgroundColorString += ` rgba(${r}, ${g}, ${b}, ${Math.log10(1 + intensity) / Math.log10(2)}) ${Math.round((index / amps.length) * 140)}%,`
       });
       backgroundColorString += " rgba(0, 0, 0, 0) 140%)";
       backgroundRef.current.style.background = backgroundColorString;
@@ -193,9 +200,9 @@ export default function BeatVisualizer() {
           }
         </div>
       ) : (
-        <div className="bg-transparent">
-          <div ref={musicRef} className={`w-[50px] h-[50px] transition-all duration-750 ease-out`}>
-            <SlMusicToneAlt className="w-full h-full" />
+        <div className="flex flex-col items-center justify-around bg-transparent ">
+          <div ref={musicRef} className={`text-[30px] transition-all duration-750 ease-out italic font-bold`}>
+            signature
           </div>
           <Particles beatIntensity={beatIntensity} />
         </div>
@@ -232,8 +239,69 @@ export default function BeatVisualizer() {
         </a>
       </div>
 
-      { 
-        (acceptedTerms) ? <SeizureAlert /> : <></>
+      {
+        file ? <div className="absolute bottom-5 w-11/12 max-w-3xl flex flex-row items-center justify-center gap-4 opacity-40 hover:opacity-100 transition-opacity">
+          <input
+            type="range"
+            min={0}
+            max={file ? audioRef.current?.duration || 0 : 0}
+            step={0.1}
+            value={audioRef.current?.currentTime || 0}
+            onChange={(e) => {
+              if (audioRef.current) {
+                audioRef.current.currentTime = parseFloat(e.target.value);
+              }
+            }}
+            className="w-full"
+            disabled={audioRef.current?.ended}
+          />
+          <span className="text-white">
+            {audioRef.current
+              ? `${Math.floor(audioRef.current.currentTime / 60)}:${Math.floor(audioRef.current.currentTime % 60)
+                .toString()
+                .padStart(2, "0")}`
+              : "0:00"}
+          </span>
+          <label className="cursor-pointer text-white border-2 border-gray-400 rounded-lg">
+            <div
+              className="px-4 py-2"
+              onClick={() => {
+                if (audioRef.current) {
+                  if (!isPlaying) {
+                    audioRef.current.play();
+                  } else {
+                    audioRef.current.pause();
+                  }
+                  setIsPlaying(prev => !prev);
+                }
+              }}
+            >
+              {!isPlaying ? <FiPlay /> : <CiPause1 />}
+            </div>
+          </label>
+          <label className="cursor-pointer text-white px-4 py-2 border-2 border-gray-400 rounded-lg">
+            <MdOutlineFileUpload />
+            <input
+              type="file"
+              accept="audio/mpeg, audio/mp3, .mp3"
+              className="hidden"
+              onChange={(e) => {
+                if (e.target.files && e.target.files[0]) {
+                  if (audioRef.current) {
+                    audioRef.current.pause();
+                    audioRef.current.currentTime = 0;
+                  }
+                  setFile(e.target.files[0]);
+                  setIsPlaying(false);
+                }
+              }}
+            />
+          </label>
+        </div> : <></>
+      }
+
+      {
+        (acceptedTerms && !dismissedSeizureAlert) ? <SeizureAlert setDismissedSeizureAlert={setDismissedSeizureAlert} /> : <></>
       }
     </div>
   );

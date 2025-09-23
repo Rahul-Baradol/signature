@@ -1,10 +1,16 @@
 import React, { useState } from 'react';
 
-const SeizureAlert: React.FC = () => {
+interface SeizureAlertProps {
+    setDismissedSeizureAlert: (dismissed: boolean) => void;
+}
+
+const SeizureAlert: React.FC<SeizureAlertProps> = ({ setDismissedSeizureAlert }) => {
     const [open, setOpen] = useState(true);
 
     const handleClose = () => {
         setOpen(false);
+        localStorage.setItem('dismissedSeizureAlert', 'true');
+        setDismissedSeizureAlert(true);
     };
 
     return (
