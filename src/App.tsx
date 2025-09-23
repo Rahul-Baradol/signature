@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import Particles from "./Particles";
 import { MdOutlineFileUpload } from "react-icons/md";
+import { SlMusicToneAlt } from "react-icons/sl";
 import { CiPause1 } from "react-icons/ci";
 
 import { FiPlay } from "react-icons/fi";
@@ -43,6 +44,7 @@ export default function BeatVisualizer() {
 
   useEffect(() => {
     if (file) {
+      let animationId: number;
       const audioCtx = new (window.AudioContext || window.AudioContext)();
       audioCtxRef.current = audioCtx;
 
@@ -95,7 +97,8 @@ export default function BeatVisualizer() {
           return sumSq / (end - start)
         }
 
-        const detectBeat = () => {
+        function detectBeat() {
+          if (!analyserRef.current || !dataArrayRef.current) return;
           liveAnalyser.getByteFrequencyData(liveData);
 
           setAmps(
@@ -127,7 +130,7 @@ export default function BeatVisualizer() {
 
             return {
               prev: prev.current,
-              current: (pushDirection * 0.075 * avg) + avg
+              current: Math.min((pushDirection * 0.075 * avg) + avg, 1)
             }
           });
 
@@ -142,20 +145,42 @@ export default function BeatVisualizer() {
           requestAnimationFrame(detectBeat);
         };
 
-        detectBeat();
+        animationId = requestAnimationFrame(detectBeat);
       };
-
+      
       reader.readAsArrayBuffer(file);
+      
+      return () => {
+        cancelAnimationFrame(animationId);
+        reader.abort();
+        audioCtxRef.current?.close();
+        audioCtxRef.current = null;
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current = null;
+        }
+        analyserRef.current = null;
+        dataArrayRef.current = null;
+        setIsPlaying(false);
+        setBeatIntensity({ prev: 0, current: 0 });
+        setHistoryOfIntensities([]);
+        setAmps([]);
+      }
     }
   }, [file]);
 
   useEffect(() => {
-    if (musicRef.current) {
-      const scale = 1 + (beatIntensity.current * 1.4);
-      musicRef.current.style.transform = `scale(${scale})`;
+    if (musicRef.current && beatIntensity.current) {
+      const scale = 1 + (beatIntensity.current * 2);
+      const skewX = (beatIntensity.current - 0.5) * 30; 
+      const skewY = (beatIntensity.current * 20) - 15; 
+
+      musicRef.current.style.transform = `
+        scale(${scale}) skewY(${(beatIntensity.current < 0.5 ? (-1 * 0.25) : 1) * skewY}deg) skewX(${((beatIntensity.current < 0.5 ? (-1 * 0.25) : 1)) * skewX}deg)
+      `;
     }
 
-    if (backgroundRef.current) {
+    if (backgroundRef.current && amps && amps.length > 0) {
       let backgroundColorString = "radial-gradient(circle at center,";
       amps.forEach((amp, index) => {
         const intensity = amp / 255;
@@ -169,7 +194,17 @@ export default function BeatVisualizer() {
       backgroundColorString += " rgba(0, 0, 0, 0) 140%)";
       backgroundRef.current.style.background = backgroundColorString;
     }
-  }, [backgroundRef, beatIntensity])
+
+    return () => {
+      if (musicRef.current) {
+        musicRef.current.style.transform = "";
+      }
+
+      if (backgroundRef.current) {
+        backgroundRef.current.style.background = "";
+      }
+    };
+  }, [file, amps, beatIntensity])
 
   return (
     <div
@@ -201,8 +236,8 @@ export default function BeatVisualizer() {
         </div>
       ) : (
         <div className="flex flex-col items-center justify-around bg-transparent ">
-          <div ref={musicRef} className={`text-[30px] transition-all duration-750 ease-out italic font-bold`}>
-            signature
+          <div ref={musicRef} className={`text-[30px] transition-all duration-750 ease-out font-bold`}>
+            <SlMusicToneAlt />
           </div>
           <Particles beatIntensity={beatIntensity} />
         </div>
@@ -279,7 +314,7 @@ export default function BeatVisualizer() {
               {!isPlaying ? <FiPlay /> : <CiPause1 />}
             </div>
           </label>
-          <label className="cursor-pointer text-white px-4 py-2 border-2 border-gray-400 rounded-lg">
+          {/* <label className="cursor-pointer text-white px-4 py-2 border-2 border-gray-400 rounded-lg">
             <MdOutlineFileUpload />
             <input
               type="file"
@@ -287,16 +322,13 @@ export default function BeatVisualizer() {
               className="hidden"
               onChange={(e) => {
                 if (e.target.files && e.target.files[0]) {
-                  if (audioRef.current) {
-                    audioRef.current.pause();
-                    audioRef.current.currentTime = 0;
-                  }
                   setFile(e.target.files[0]);
                   setIsPlaying(false);
+                  setBeatIntensity({ prev: 0, current: 0 });
                 }
               }}
             />
-          </label>
+          </label> */}
         </div> : <></>
       }
 
