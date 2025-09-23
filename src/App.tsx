@@ -101,12 +101,6 @@ export default function BeatVisualizer() {
           if (!analyserRef.current || !dataArrayRef.current) return;
           liveAnalyser.getByteFrequencyData(liveData);
 
-          setAmps(
-            Array.from({ length: liveData.length / 4 }, (_, i) =>
-              (liveData[i * 4] + liveData[i * 4 + 1] + liveData[i * 4 + 2] + liveData[i * 4 + 3]) / 4
-            )
-          );
-
           const lowCount = Math.floor(liveData.length * 0.5);
           const midCount = Math.floor(liveData.length * 0.30);
 
@@ -123,6 +117,23 @@ export default function BeatVisualizer() {
 
             avg = (eff - minIntensity) / (maxIntensity - minIntensity);
             avg = Math.min(Math.max(avg, 0), 1);
+          }
+
+          if (avg <= 0.5) {
+            setAmps(
+              Array.from({ length: liveData.length / 4 }, (_, i) =>
+                (liveData[i * 4] + liveData[i * 4 + 1] + liveData[i * 4 + 2] + liveData[i * 4 + 3]) / 4
+              )
+            );
+          } else {
+            setAmps(
+              Array.from({ length: Math.ceil(liveData.length / 3) }, (_, i) => {
+              const start = i * 3;
+              const end = Math.min(start + 3, liveData.length);
+              const sum = liveData.slice(start, end).reduce((acc, val) => acc + val, 0);
+              return sum / (end - start);
+              })
+            );
           }
 
           setBeatIntensity((prev) => {
