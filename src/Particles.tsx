@@ -12,30 +12,20 @@ class Particle {
     beatIntensity: number;
 
     constructor(canvas: HTMLCanvasElement, context: CanvasRenderingContext2D) {
+        this.alpha = 1
+        this.pushDirection = 1;
+        this.beatIntensity = 0;
+        this.vy = 0.5;
+
         this.context = context;
         this.canvas = canvas;
 
         this.x = Math.random() * canvas.width;
-        this.y = canvas.height;
-        this.size = Math.random() * 2 + 1;
-
-        const targetX = this.x;
-        const targetY = 0;
-
-        const dx = targetX - this.x + (Math.random() - 0.5) * 50;
-        const dy = targetY - this.y + (Math.random() - 0.5) * 50;
-
-        const mag = Math.sqrt(dx * dx + dy * dy);
-        const speed = Math.random() * 0.4 + 0.05;
-
-        this.vy = (dy / mag) * speed;
-
-        this.alpha = 1
-        this.pushDirection = 1;
-        this.beatIntensity = 0;
+        this.y = canvas.height + 10;
+        this.size = (Math.random() * 2) + 1;
     }
 
-    update() { 
+    update() {
         if (this.beatIntensity <= 0.25) {
             this.context.fillStyle = `rgba(255, 255, 255, ${this.alpha})`;
         } else if (this.beatIntensity <= 0.5) {
@@ -44,11 +34,15 @@ class Particle {
             this.context.fillStyle = `rgba(255, 100, 0, ${this.alpha})`;
         }
 
-        if (this.pushDirection === 1) {
-            this.y -= Math.abs(this.vy) * 20 * this.beatIntensity;
+        const direction = (this.pushDirection === 1) ? -1 : 1;
+        let speed;
+        if (this.pushDirection == 1) {
+            speed = this.beatIntensity * 10;
         } else {
-            this.y += Math.abs(this.vy) * 10
+            speed = (1 - this.beatIntensity) * 5;
         }
+
+        this.y += (direction * this.vy * speed);
     }
 
     draw() {
@@ -58,7 +52,7 @@ class Particle {
     }
 
     isDead() {
-        return this.y < 0 || this.y > this.canvas.height;
+        return this.y < 0 || this.y > (this.canvas.height + 10);
     }
 }
 
@@ -109,26 +103,43 @@ const Particles = ({ beatIntensity }: { beatIntensity: any }) => {
     }, []);
 
     useEffect(() => {
-        const randomIndices = new Set<number>();
-        const pushDirection = (beatIntensity.current > (0.75 * beatIntensity.prev)) ? 1 : -1;
+        const pushDirection = (beatIntensity.current > (0.5 * beatIntensity.prev)) ? 1 : -1;
 
-        let countOfParticlesToAffect;
-        if (pushDirection == 1) {
-            countOfParticlesToAffect = Math.min(50 + Math.floor(beatIntensity.current * 150), particles.current.length);
+        if (pushDirection === 1) {
+            let countOfParticlesToAffect;
+            if (beatIntensity.current <= 0.25) {
+                countOfParticlesToAffect = 1;
+            } else if (beatIntensity.current <= 0.5) {
+                countOfParticlesToAffect = 2;
+            } else {
+                countOfParticlesToAffect = 3;
+            }
+    
+            switch (true) {
+                case (beatIntensity.current <= 0.25):
+                    countOfParticlesToAffect = 1;
+                    break;
+    
+                case (beatIntensity.current <= 0.5):
+                    countOfParticlesToAffect = 2;
+                    break;
+    
+                default:
+                    countOfParticlesToAffect = 3;
+            }
+    
+            for (let i = 0; i < countOfParticlesToAffect; i++) {
+                const randomIndex = Math.floor(Math.random() * particles.current.length);
+                console.log(randomIndex, particles.current.length);
+                particles.current[randomIndex].pushDirection = pushDirection;
+                particles.current[randomIndex].beatIntensity = beatIntensity.current;
+            }
         } else {
-            countOfParticlesToAffect = particles.current.length;
-        }
-
-        while (randomIndices.size < countOfParticlesToAffect) {
-            randomIndices.add(Math.floor(Math.random() * particles.current.length));
-        }
-
-        particles.current.forEach((p, index) => {
-            if (randomIndices.has(index)) {
+            particles.current.forEach(p => {
                 p.pushDirection = pushDirection;
                 p.beatIntensity = beatIntensity.current;
-            }
-        });
+            });
+        }
     }, [beatIntensity]);
 
     return (
