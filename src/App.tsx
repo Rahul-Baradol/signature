@@ -200,7 +200,9 @@ export default function BeatVisualizer() {
         g = Math.round(100 * intensity);
         b = 255;
 
-        backgroundColorString += ` rgba(${r}, ${g}, ${b}, ${Math.log10(1 + intensity) / Math.log10(2)}) ${Math.round((index / amps.length) * 140)}%,`
+        const multiplier = 10;
+        const alpha = Math.log(1 + (multiplier * intensity)) / Math.log(1 + multiplier);
+        backgroundColorString += ` rgba(${r}, ${g}, ${b}, ${alpha}) ${Math.round((index / amps.length) * 140)}%,`
       });
       backgroundColorString += " rgba(0, 0, 0, 0) 140%)";
       backgroundRef.current.style.background = backgroundColorString;

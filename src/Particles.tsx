@@ -46,7 +46,7 @@ class Particle {
     update() { 
         if (this.beatIntensity <= 0.25) {
             this.context.fillStyle = `rgba(255, 255, 255, ${this.alpha})`;
-        } else if (this.beatIntensity <= 0.75) {
+        } else if (this.beatIntensity <= 0.5) {
             this.context.fillStyle = `rgba(255, 150, 75, ${this.alpha})`;
         } else {
             this.context.fillStyle = `rgba(255, 100, 0, ${this.alpha})`;
