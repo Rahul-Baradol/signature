@@ -6,8 +6,7 @@ class Particle {
     x: number;
     y: number;
     size: number;
-    vyUp: number;
-    vyDown: number;
+    vy: number;
     alpha: number;
     pushDirection: number;
     beatIntensity: number;
@@ -22,25 +21,18 @@ class Particle {
 
         const targetX = this.x;
         const targetY = 0;
-        const targetY2 = canvas.height;
 
         const dx = targetX - this.x + (Math.random() - 0.5) * 50;
-
         const dy = targetY - this.y + (Math.random() - 0.5) * 50;
-        const dy2 = targetY2 - this.y + (Math.random() - 0.5) * 50;
 
         const mag = Math.sqrt(dx * dx + dy * dy);
         const speed = Math.random() * 0.4 + 0.05;
 
-        const mag2 = Math.sqrt(dx * dx + dy2 * dy2);
-        const speed2 = Math.random() * 0.4 + 0.05;
-
-        this.vyUp = (dy / mag) * speed;
-        this.vyDown = (dy2 / mag2) * speed2;
+        this.vy = (dy / mag) * speed;
 
         this.alpha = 1
         this.pushDirection = 1;
-        this.beatIntensity = 1;
+        this.beatIntensity = 0;
     }
 
     update() { 
@@ -53,9 +45,9 @@ class Particle {
         }
 
         if (this.pushDirection === 1) {
-            this.y -= Math.abs(this.vyUp) * 20 * this.beatIntensity;
+            this.y -= Math.abs(this.vy) * 20 * this.beatIntensity;
         } else {
-            this.y += Math.abs(this.vyDown) * 12 * (1 - this.beatIntensity)
+            this.y += Math.abs(this.vy) * 10
         }
     }
 
