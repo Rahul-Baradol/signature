@@ -182,12 +182,15 @@ export default function BeatVisualizer() {
 
   useEffect(() => {
     if (musicRef.current && beatIntensity.current) {
-      const scale = 1 + (beatIntensity.current * 2);
-      const skewX = (beatIntensity.current - 0.5) * 30; 
-      const skewY = (beatIntensity.current * 20) - 15; 
+      const multipler = 10;
+      const alpha = Math.log(1 + (multipler * beatIntensity.current)) / Math.log(1 + multipler);
+
+      const scale = 1 + (alpha * 2.5);
+      const skewY = (alpha * -10)
+      const skewX = (alpha * 5);
 
       musicRef.current.style.transform = `
-        scale(${scale}) skewY(${(beatIntensity.current < 0.5 ? (-1 * 0.25) : 1) * skewY}deg) skewX(${((beatIntensity.current < 0.5 ? (-1 * 0.25) : 1)) * skewX}deg)
+        scale(${scale}) skewY(${skewY}deg) skewX(${skewX}deg)
       `;
     }
 

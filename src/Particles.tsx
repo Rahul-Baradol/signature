@@ -130,7 +130,6 @@ const Particles = ({ beatIntensity }: { beatIntensity: any }) => {
     
             for (let i = 0; i < countOfParticlesToAffect; i++) {
                 const randomIndex = Math.floor(Math.random() * particles.current.length);
-                console.log(randomIndex, particles.current.length);
                 particles.current[randomIndex].pushDirection = pushDirection;
                 particles.current[randomIndex].beatIntensity = beatIntensity.current;
             }
