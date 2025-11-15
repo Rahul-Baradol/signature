@@ -1,5 +1,3 @@
-import { state } from "../state";
-
 export let scene2 = `
     <style>
         #scene2 {

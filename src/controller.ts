@@ -77,7 +77,6 @@ export function initializeAudioControls() {
 
 export function beginShow() {
     if (state.getFile()) {
-        let animationId: number;
         const audioCtx = new (window.AudioContext || window.AudioContext)();
 
         const reader = new FileReader();
@@ -140,8 +139,12 @@ export function beginShow() {
                     let minIntensity = Math.min(...state.getHistoryOfIntensities());
                     let maxIntensity = Math.max(...state.getHistoryOfIntensities());
 
-                    avg = (eff - minIntensity) / (maxIntensity - minIntensity);
-                    avg = Math.min(Math.max(avg, 0), 1);
+                    if ((maxIntensity - minIntensity) == 0) {
+                        avg = 0;
+                    } else {
+                        avg = (eff - minIntensity) / (maxIntensity - minIntensity);
+                        avg = Math.min(Math.max(avg, 0), 1);
+                    }
                 }
 
                 if (avg <= 0.5) {
@@ -176,7 +179,7 @@ export function beginShow() {
                 requestAnimationFrame(detectBeat);
             };
 
-            animationId = requestAnimationFrame(detectBeat);
+            requestAnimationFrame(detectBeat);
         };
 
         reader.readAsArrayBuffer(state.getFile()!);
@@ -217,27 +220,7 @@ export function updateCanvas(beatIntensity: { current: number; prev: number }, p
     const pushDirection = (beatIntensity.current > (0.5 * beatIntensity.prev)) ? 1 : -1;
 
     if (pushDirection === 1) {
-        let countOfParticlesToAffect;
-        if (beatIntensity.current <= 0.25) {
-            countOfParticlesToAffect = 1;
-        } else if (beatIntensity.current <= 0.5) {
-            countOfParticlesToAffect = 2;
-        } else {
-            countOfParticlesToAffect = 3;
-        }
-
-        switch (true) {
-            case (beatIntensity.current <= 0.25):
-                countOfParticlesToAffect = 1;
-                break;
-
-            case (beatIntensity.current <= 0.5):
-                countOfParticlesToAffect = 2;
-                break;
-
-            default:
-                countOfParticlesToAffect = 3;
-        }
+        let countOfParticlesToAffect = 50;
 
         for (let i = 0; i < countOfParticlesToAffect; i++) {
             const randomIndex = Math.floor(Math.random() * particles.length);
