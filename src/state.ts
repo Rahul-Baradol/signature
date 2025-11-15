@@ -1,4 +1,5 @@
-import { updateGradients, updateMusicIconProperties } from "./controller";
+import { updateCanvas, updateGradients, updateMusicIconProperties } from "./controller";
+import type { Particle } from "./Particle";
 
 class State {
     private file: File | null = null;
@@ -7,6 +8,8 @@ class State {
 
     private amps: number[] = [];
     private historyOfIntensities: number[] = [];
+
+    public particles: Particle[] = [];
 
     private beatIntensity = {
         current: 0,
@@ -59,7 +62,9 @@ class State {
     setBeatIntensity(current: number, prev: number) {
         this.beatIntensity.current = current;
         this.beatIntensity.prev = prev;
+        
         updateMusicIconProperties(this.beatIntensity);
+        updateCanvas(this.beatIntensity, this.particles);
     }
 
     getBeatIntensity() {

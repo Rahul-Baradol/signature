@@ -1,3 +1,4 @@
+import { Particle } from "./Particle";
 import { state } from "./state";
 
 export function hideScene1() {
@@ -5,6 +6,46 @@ export function hideScene1() {
     if (inputElement) {
         inputElement.style.display = "none";
     }
+}
+
+export function initializeCanvas() {
+    const canvas = document.getElementById("particleCanvas") as HTMLCanvasElement;
+    const context = canvas.getContext("2d")!;
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+
+    function spawnParticle() {
+        if (state.particles.length < 200) {
+            state.particles.push(new Particle(canvas, context));
+        }
+    }
+
+    function animate() {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+
+        spawnParticle();
+
+        state.particles.forEach((p, i) => {
+            p.update();
+            p.draw();
+
+            if (p.isDead()) {
+                state.particles.splice(i, 1);
+            }
+        });
+
+        requestAnimationFrame(animate);
+    }
+
+    requestAnimationFrame(animate);
+
+    function setCanvasSize() {
+        state.particles = [];
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+    }
+
+    window.addEventListener("resize", setCanvasSize);
 }
 
 export function beginShow() {
@@ -149,4 +190,43 @@ export function updateMusicIconProperties(beatIntensity: { current: number; prev
     document.getElementById("icon")!.style.transform = `
         scale(${scale}) skewY(${skewY}deg) skewX(${skewX}deg)
     `;
+}
+
+export function updateCanvas(beatIntensity: { current: number; prev: number }, particles: Particle[]) {
+    const pushDirection = (beatIntensity.current > (0.5 * beatIntensity.prev)) ? 1 : -1;
+
+    if (pushDirection === 1) {
+        let countOfParticlesToAffect;
+        if (beatIntensity.current <= 0.25) {
+            countOfParticlesToAffect = 1;
+        } else if (beatIntensity.current <= 0.5) {
+            countOfParticlesToAffect = 2;
+        } else {
+            countOfParticlesToAffect = 3;
+        }
+
+        switch (true) {
+            case (beatIntensity.current <= 0.25):
+                countOfParticlesToAffect = 1;
+                break;
+
+            case (beatIntensity.current <= 0.5):
+                countOfParticlesToAffect = 2;
+                break;
+
+            default:
+                countOfParticlesToAffect = 3;
+        }
+
+        for (let i = 0; i < countOfParticlesToAffect; i++) {
+            const randomIndex = Math.floor(Math.random() * particles.length);
+            particles[randomIndex].pushDirection = pushDirection;
+            particles[randomIndex].beatIntensity = beatIntensity.current;
+        }
+    } else {
+        particles.forEach(p => {
+            p.pushDirection = pushDirection;
+            p.beatIntensity = beatIntensity.current;
+        });
+    }
 }
