@@ -1,4 +1,4 @@
-import { beginShow, hideScene1, initializeCanvas } from './controller';
+import { beginShow, hideScene1, initializeAudioControls, initializeCanvas } from './controller';
 import { scene1 } from './scenes/scene1';
 import { scene2 } from './scenes/scene2';
 import { state } from './state';
@@ -17,6 +17,7 @@ document.querySelector<HTMLInputElement>("#audioFileInput")!.addEventListener("c
     document.querySelector<HTMLDivElement>('#app')!.innerHTML = scene2;
 
     initializeCanvas();
+    initializeAudioControls();
     beginShow();
   }
 });

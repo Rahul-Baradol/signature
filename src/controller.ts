@@ -48,12 +48,35 @@ export function initializeCanvas() {
     window.addEventListener("resize", setCanvasSize);
 }
 
-export function beginShow() {
-    let file: File | null = state.getFile();
-    let audio: HTMLAudioElement | null = state.getAudio();
+export function initializeAudioControls() {
+    const audioRange: HTMLInputElement | null = document.getElementById("audioRange") as HTMLInputElement;
+    const currentTime: HTMLSpanElement | null = document.getElementById("currentTime") as HTMLSpanElement;
+    const playPauseButton: HTMLDivElement | null = document.getElementById("playPauseButton") as HTMLDivElement;
 
-    console.log("Beginning show with file: ", file);
-    if (file) {
+    playPauseButton.addEventListener("click", () => {
+        if (state.getIsPlaying() == true) {
+            state.pauseAudio();
+            playPauseButton.textContent = "Play";
+        } else {
+            state.playAudio();
+            playPauseButton.textContent = "Pause";
+        }
+    });
+
+    audioRange.addEventListener("input", (e) => {
+        if (e.target) {
+            const audioElement = state.getAudio();
+            if (audioElement) {
+                audioElement.currentTime = parseFloat((e.target as HTMLInputElement).value);
+                currentTime.textContent = `${Math.floor(audioElement.currentTime / 60)}:${Math.floor(audioElement.currentTime % 60).toString().padStart(2, "0")}`;
+                state.seekAudio(audioElement.currentTime);
+            }
+        }
+    });
+}
+
+export function beginShow() {
+    if (state.getFile()) {
         let animationId: number;
         const audioCtx = new (window.AudioContext || window.AudioContext)();
 
@@ -82,8 +105,7 @@ export function beginShow() {
             source.start();
 
             // --- Now start actual playback ---
-            audio = new Audio(URL.createObjectURL(file!));
-            const liveSource = audioCtx.createMediaElementSource(audio);
+            const liveSource = audioCtx.createMediaElementSource(state.getAudio()!);
             const liveAnalyser = audioCtx.createAnalyser();
             liveAnalyser.fftSize = 512;
             const liveData = new Uint8Array(liveAnalyser.frequencyBinCount);
@@ -91,8 +113,7 @@ export function beginShow() {
             liveSource.connect(liveAnalyser);
             liveAnalyser.connect(audioCtx.destination);
 
-            audio.play();
-            state.setIsPlaying(true);
+            state.playAudio();
 
             function rmsRange(arr: any, start: number, end: number) {
                 let sumSq = 0;
@@ -158,7 +179,7 @@ export function beginShow() {
             animationId = requestAnimationFrame(detectBeat);
         };
 
-        reader.readAsArrayBuffer(file);
+        reader.readAsArrayBuffer(state.getFile()!);
     }
 }
 
@@ -228,5 +249,18 @@ export function updateCanvas(beatIntensity: { current: number; prev: number }, p
             p.pushDirection = pushDirection;
             p.beatIntensity = beatIntensity.current;
         });
+    }
+}
+
+export function updateAudioControls() {
+    const audioRange: HTMLInputElement | null = document.getElementById("audioRange") as HTMLInputElement;
+    const currentTime: HTMLSpanElement | null = document.getElementById("currentTime") as HTMLSpanElement;
+    const playPauseButton: HTMLDivElement | null = document.getElementById("playPauseButton") as HTMLDivElement;
+
+    if (state.getAudio() && audioRange && currentTime && playPauseButton) {
+        audioRange.max = state.getAudio()!.duration.toString();
+        audioRange.disabled = false;
+        audioRange.value = state.getAudio()!.currentTime.toString();
+        currentTime.textContent = `${Math.floor(state.getAudio()!.currentTime / 60)}:${Math.floor(state.getAudio()!.currentTime % 60).toString().padStart(2, "0")}`;
     }
 }

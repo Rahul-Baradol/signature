@@ -1,3 +1,5 @@
+import { state } from "../state";
+
 export let scene2 = `
     <style>
         #scene2 {
@@ -34,6 +36,42 @@ export let scene2 = `
             font-weight: bold;
         }
 
+        .audio-controls {
+            position: absolute;
+            bottom: 20px;
+            width: 91.6667%;
+            max-width: 768px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            opacity: 0.4;
+            transition: opacity 0.3s ease;
+        }
+
+        .audio-controls:hover {
+            opacity: 1;
+        }
+
+        .audio-range {
+            width: 100%;
+        }
+
+        .current-time {
+            color: white;
+        }
+
+        .play-pause-label {
+            cursor: pointer;
+            color: white;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+        }
+
+        .play-pause-button {
+            padding: 8px 16px;
+        }
     </style>
 
     <div id="scene2">
@@ -43,6 +81,24 @@ export let scene2 = `
         <canvas
             id="particleCanvas"
         ></canvas>
+
+        <div class="audio-controls">
+          <input
+            id="audioRange"
+            type="range"
+            min="0"
+            max="0"
+            step="0.1"
+            value="0"
+            class="audio-range"
+          />
+          <span id="currentTime" class="current-time">0:00</span>
+          <label class="play-pause-label">
+            <div id="playPauseButton" class="play-pause-button">
+              Pause
+            </div>
+          </label>
+        </div>
     </div>
 `;
 

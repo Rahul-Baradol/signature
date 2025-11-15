@@ -1,4 +1,4 @@
-import { updateCanvas, updateGradients, updateMusicIconProperties } from "./controller";
+import { updateAudioControls, updateCanvas, updateGradients, updateMusicIconProperties } from "./controller";
 import type { Particle } from "./Particle";
 
 class State {
@@ -30,12 +30,32 @@ class State {
         console.log("Audio set to: ", audio);
     }
 
+    seekAudio(time: number) {
+        if (this.audio) {
+            this.audio.currentTime = time;
+        }
+    }
+
     getAudio() {
         return this.audio;
     }
 
-    setIsPlaying(playing: boolean) {
-        this.isPlaying = playing;
+    pauseAudio() {
+        if (this.audio) {
+            this.audio.pause();
+            this.setIsPlaying(false);
+        }
+    }
+
+    playAudio() {
+        if (this.audio) {
+            this.audio.play();
+            this.setIsPlaying(true);
+        }
+    }
+
+    setIsPlaying(isPlaying: boolean) {
+        this.isPlaying = isPlaying;
     }
 
     getIsPlaying() {
@@ -63,6 +83,7 @@ class State {
         this.beatIntensity.current = current;
         this.beatIntensity.prev = prev;
         
+        updateAudioControls();
         updateMusicIconProperties(this.beatIntensity);
         updateCanvas(this.beatIntensity, this.particles);
     }
