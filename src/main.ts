@@ -1,10 +1,11 @@
 import { beginShow, hideScene1, initializeAudioControls, initializeCanvas } from './controller';
 import { scene1 } from './scenes/scene1';
 import { scene2 } from './scenes/scene2';
+import { socialLinks } from './scenes/social-links';
 import { state } from './state';
 import './style.css'
 
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = scene1;
+document.querySelector<HTMLDivElement>('#app')!.innerHTML = scene1 + socialLinks;
 
 document.querySelector<HTMLInputElement>("#audioFileInput")!.addEventListener("change", (event) => {
   const target = event.target as HTMLInputElement;
@@ -14,7 +15,7 @@ document.querySelector<HTMLInputElement>("#audioFileInput")!.addEventListener("c
     
     hideScene1();
     
-    document.querySelector<HTMLDivElement>('#app')!.innerHTML = scene2;
+    document.querySelector<HTMLDivElement>('#app')!.innerHTML = scene2 + socialLinks;
 
     initializeCanvas();
     initializeAudioControls();
