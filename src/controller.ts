@@ -137,3 +137,16 @@ export function updateGradients(amps: number[]) {
     backgroundColorString += " rgba(0, 0, 0, 0) 140%)";
     document.getElementById('scene2')!.style.background = backgroundColorString;
 }
+
+export function updateMusicIconProperties(beatIntensity: { current: number; prev: number }) {
+    const multipler = 10;
+    const alpha = Math.log(1 + (multipler * beatIntensity.current)) / Math.log(1 + multipler);
+
+    const scale = 1 + (alpha * 2.5);
+    const skewY = (alpha * -10)
+    const skewX = (alpha * 5);
+
+    document.getElementById("icon")!.style.transform = `
+        scale(${scale}) skewY(${skewY}deg) skewX(${skewX}deg)
+    `;
+}

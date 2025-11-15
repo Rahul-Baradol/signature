@@ -1,4 +1,4 @@
-import { updateGradients } from "./controller";
+import { updateGradients, updateMusicIconProperties } from "./controller";
 
 class State {
     private file: File | null = null;
@@ -59,6 +59,7 @@ class State {
     setBeatIntensity(current: number, prev: number) {
         this.beatIntensity.current = current;
         this.beatIntensity.prev = prev;
+        updateMusicIconProperties(this.beatIntensity);
     }
 
     getBeatIntensity() {
