@@ -65,10 +65,16 @@ export let scene2 = `
             color: white;
             border: 2px solid #ccc;
             border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .play-pause-button {
-            padding: 8px 16px;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
     </style>
 
@@ -92,9 +98,7 @@ export let scene2 = `
           />
           <span id="currentTime" class="current-time">0:00</span>
           <label class="play-pause-label">
-            <div id="playPauseButton" class="play-pause-button">
-              Pause
-            </div>
+            <div id="playPauseButton" class="play-pause-button"></div>
           </label>
         </div>
     </div>

@@ -1,3 +1,4 @@
+import { pauseIcon, playIcon } from "./html/icons";
 import { Particle } from "./Particle";
 import { state } from "./state";
 
@@ -56,10 +57,10 @@ export function initializeAudioControls() {
     playPauseButton.addEventListener("click", () => {
         if (state.getIsPlaying() == true) {
             state.pauseAudio();
-            playPauseButton.textContent = "Play";
+            playPauseButton.innerHTML = playIcon;
         } else {
             state.playAudio();
-            playPauseButton.textContent = "Pause";
+            playPauseButton.innerHTML = pauseIcon;
         }
     });
 

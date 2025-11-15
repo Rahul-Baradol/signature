@@ -1,9 +1,10 @@
 import { beginShow, hideScene1, initializeAudioControls, initializeCanvas } from './controller';
-import { scene1 } from './scenes/scene1';
-import { scene2 } from './scenes/scene2';
-import { seizureAlert } from './scenes/seizure-alert';
-import { socialLinks } from './scenes/social-links';
-import { terms } from './scenes/terms';
+import { pauseIcon } from './html/icons';
+import { scene1 } from './html/scene1';
+import { scene2 } from './html/scene2';
+import { seizureAlert } from './html/seizure-alert';
+import { socialLinks } from './html/social-links';
+import { terms } from './html/terms';
 import { state } from './state';
 import './style.css'
 
@@ -44,7 +45,8 @@ function render() {
       hideScene1();
 
       document.querySelector<HTMLDivElement>('#app')!.innerHTML = scene2 + socialLinks;
-
+      
+      document.getElementById("playPauseButton")!.innerHTML = pauseIcon;
       initializeCanvas();
       initializeAudioControls();
       beginShow();
