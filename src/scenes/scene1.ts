@@ -36,17 +36,15 @@ export let scene1 = `
         }
     </style>
 
-    <div id="app">
-        <div id="scene1">
-            <label>
-                <div style="font-size: 15px;"> Upload MP3 ( to visualize ) </div>
-                <input
-                    id="audioFileInput"
-                    type="file"
-                    accept="audio/mpeg, audio/mp3, .mp3"
-                    style="display: none;"
-                />
-            </label>
-        </div>
+    <div id="scene1">
+        <label>
+            <div style="font-size: 15px;"> Upload MP3 ( to visualize ) </div>
+            <input
+                id="audioFileInput"
+                type="file"
+                accept="audio/mpeg, audio/mp3, .mp3"
+                style="display: none;"
+            />
+        </label>
     </div>
 `;

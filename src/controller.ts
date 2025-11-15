@@ -1,121 +1,139 @@
+import { state } from "./state";
+
 export function hideScene1() {
-  const inputElement = document.getElementById("scene1");
-  if (inputElement) {
-    inputElement.style.display = "none";
-  }
+    const inputElement = document.getElementById("scene1");
+    if (inputElement) {
+        inputElement.style.display = "none";
+    }
 }
 
-// function beginShow() {
-//   if (file) {
-//     let animationId: number;
-//     const audioCtx = new (window.AudioContext || window.AudioContext)();
+export function beginShow() {
+    let file: File | null = state.getFile();
+    let audio: HTMLAudioElement | null = state.getAudio();
 
-//     const reader = new FileReader();
-//     reader.onload = async (e) => {
-//       const arrayBuffer = e.target?.result as ArrayBuffer;
+    console.log("Beginning show with file: ", file);
+    if (file) {
+        let animationId: number;
+        const audioCtx = new (window.AudioContext || window.AudioContext)();
 
-//       // Decode full track
-//       const decodedData = await audioCtx.decodeAudioData(arrayBuffer);
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const arrayBuffer = e.target?.result as ArrayBuffer;
 
-//       // Pre-scan using OfflineAudioContext
-//       const offlineCtx = new OfflineAudioContext(
-//         decodedData.numberOfChannels,
-//         decodedData.length,
-//         decodedData.sampleRate
-//       );
-//       const source = offlineCtx.createBufferSource();
-//       source.buffer = decodedData;
+            // Decode full track
+            const decodedData = await audioCtx.decodeAudioData(arrayBuffer);
 
-//       const analyser = offlineCtx.createAnalyser();
-//       analyser.fftSize = 512;
+            // Pre-scan using OfflineAudioContext
+            const offlineCtx = new OfflineAudioContext(
+                decodedData.numberOfChannels,
+                decodedData.length,
+                decodedData.sampleRate
+            );
+            const source = offlineCtx.createBufferSource();
+            source.buffer = decodedData;
 
-//       source.connect(analyser);
-//       analyser.connect(offlineCtx.destination);
+            const analyser = offlineCtx.createAnalyser();
+            analyser.fftSize = 512;
 
-//       source.start();
+            source.connect(analyser);
+            analyser.connect(offlineCtx.destination);
 
-//       // --- Now start actual playback ---
-//       audio = new Audio(URL.createObjectURL(file!));
-//       const liveSource = audioCtx.createMediaElementSource(audio);
-//       const liveAnalyser = audioCtx.createAnalyser();
-//       liveAnalyser.fftSize = 512;
-//       const liveData = new Uint8Array(liveAnalyser.frequencyBinCount);
+            source.start();
 
-//       liveSource.connect(liveAnalyser);
-//       liveAnalyser.connect(audioCtx.destination);
+            // --- Now start actual playback ---
+            audio = new Audio(URL.createObjectURL(file!));
+            const liveSource = audioCtx.createMediaElementSource(audio);
+            const liveAnalyser = audioCtx.createAnalyser();
+            liveAnalyser.fftSize = 512;
+            const liveData = new Uint8Array(liveAnalyser.frequencyBinCount);
 
-//       audio.play();
-//       setIsPlaying(true);
+            liveSource.connect(liveAnalyser);
+            liveAnalyser.connect(audioCtx.destination);
 
-//       function rmsRange(arr: any, start: number, end: number) {
-//         let sumSq = 0;
-//         for (let i = Math.floor(start); i < Math.floor(end); i++) {
-//           sumSq += arr[i];
-//         }
-//         return sumSq / (end - start)
-//       }
+            audio.play();
+            state.setIsPlaying(true);
 
-//       function detectBeat() {
-//         liveAnalyser.getByteFrequencyData(liveData);
+            function rmsRange(arr: any, start: number, end: number) {
+                let sumSq = 0;
+                for (let i = Math.floor(start); i < Math.floor(end); i++) {
+                    sumSq += arr[i];
+                }
+                return sumSq / (end - start)
+            }
 
-//         const lowCount = Math.floor(liveData.length * 0.5);
-//         const midCount = Math.floor(liveData.length * 0.30);
+            function detectBeat() {
+                liveAnalyser.getByteFrequencyData(liveData);
 
-//         const avgLow = rmsRange(liveData, 0, lowCount);
-//         const avgMid = rmsRange(liveData, lowCount, lowCount + midCount);
-//         const avgHigh = rmsRange(liveData, lowCount + midCount, liveData.length);
+                const lowCount = Math.floor(liveData.length * 0.5);
+                const midCount = Math.floor(liveData.length * 0.30);
 
-//         let eff = Math.max(avgLow, avgMid, avgHigh) / 255;
+                const avgLow = rmsRange(liveData, 0, lowCount);
+                const avgMid = rmsRange(liveData, lowCount, lowCount + midCount);
+                const avgHigh = rmsRange(liveData, lowCount + midCount, liveData.length);
 
-//         let avg = eff;
-//         if (historyOfIntensities.length == 60) {
-//           let minIntensity = Math.min(...historyOfIntensities);
-//           let maxIntensity = Math.max(...historyOfIntensities);
+                let eff = Math.max(avgLow, avgMid, avgHigh) / 255;
 
-//           avg = (eff - minIntensity) / (maxIntensity - minIntensity);
-//           avg = Math.min(Math.max(avg, 0), 1);
-//         }
+                let avg = eff;
+                if (state.getHistoryOfIntensities().length == 60) {
+                    let minIntensity = Math.min(...state.getHistoryOfIntensities());
+                    let maxIntensity = Math.max(...state.getHistoryOfIntensities());
 
-//         if (avg <= 0.5) {
-//           setAmps(
-//             Array.from({ length: liveData.length / 4 }, (_, i) =>
-//               (liveData[i * 4] + liveData[i * 4 + 1] + liveData[i * 4 + 2] + liveData[i * 4 + 3]) / 4
-//             )
-//           );
-//         } else {
-//           setAmps(
-//             Array.from({ length: Math.ceil(liveData.length / 3) }, (_, i) => {
-//               const start = i * 3;
-//               const end = Math.min(start + 3, liveData.length);
-//               const sum = liveData.slice(start, end).reduce((acc, val) => acc + val, 0);
-//               return sum / (end - start);
-//             })
-//           );
-//         }
+                    avg = (eff - minIntensity) / (maxIntensity - minIntensity);
+                    avg = Math.min(Math.max(avg, 0), 1);
+                }
 
-//         setBeatIntensity((prev) => {
-//           const pushDirection = (avg > prev.current) ? 1 : -1;
+                if (avg <= 0.5) {
+                    state.setAmps(
+                        Array.from({ length: liveData.length / 4 }, (_, i) =>
+                            (liveData[i * 4] + liveData[i * 4 + 1] + liveData[i * 4 + 2] + liveData[i * 4 + 3]) / 4
+                        )
+                    );
+                } else {
+                    state.setAmps(
+                        Array.from({ length: Math.ceil(liveData.length / 3) }, (_, i) => {
+                            const start = i * 3;
+                            const end = Math.min(start + 3, liveData.length);
+                            const sum = liveData.slice(start, end).reduce((acc, val) => acc + val, 0);
+                            return sum / (end - start);
+                        })
+                    );
+                }
 
-//           return {
-//             prev: prev.current,
-//             current: Math.min((pushDirection * 0.075 * avg) + avg, 1)
-//           }
-//         });
+                const pushDirection = (avg > state.getBeatIntensity().current) ? 1 : -1;
+                state.setBeatIntensity(
+                    Math.min((pushDirection * 0.075 * avg) + avg, 1),
+                    state.getBeatIntensity().current
+                );
 
-//         setHistoryOfIntensities((prev) => {
-//           const updated = [...prev, eff];
-//           if (updated.length > 60) {
-//             updated.shift();
-//           }
-//           return updated;
-//         });
+                const updated = [...state.getHistoryOfIntensities(), eff];
+                if (updated.length > 60) {
+                    updated.shift();
+                }
 
-//         requestAnimationFrame(detectBeat);
-//       };
+                state.setHistoryOfIntensities(updated);
+                requestAnimationFrame(detectBeat);
+            };
 
-//       animationId = requestAnimationFrame(detectBeat);
-//     };
+            animationId = requestAnimationFrame(detectBeat);
+        };
 
-//     reader.readAsArrayBuffer(file);
-//   }
-// }
+        reader.readAsArrayBuffer(file);
+    }
+}
+
+export function updateGradients(amps: number[]) {
+    let backgroundColorString = "radial-gradient(circle at center,";
+    amps.forEach((amp, index) => {
+        const intensity = amp / 255;
+        let r, g, b;
+        r = Math.round(140 * intensity);
+        g = Math.round(100 * intensity);
+        b = 255;
+
+        const multiplier = 10;
+        const alpha = Math.log(1 + (multiplier * intensity)) / Math.log(1 + multiplier);
+        backgroundColorString += ` rgba(${r}, ${g}, ${b}, ${alpha}) ${Math.round((index / amps.length) * 140)}%,`
+    });
+    backgroundColorString += " rgba(0, 0, 0, 0) 140%)";
+    document.getElementById('scene2')!.style.background = backgroundColorString;
+}
