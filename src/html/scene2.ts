@@ -1,5 +1,9 @@
 export let scene2 = `
     <style>
+        #icon {
+            z-index: 1;
+        }
+
         #scene2 {
             width: 100vw;
             height: 100vh;
@@ -20,6 +24,19 @@ export let scene2 = `
             left: 0;
             pointer-events: none;
             z-index: 1;
+        }
+
+        #gradientCanvas {
+            position: absolute;
+            display: block;
+            background: transparent;
+            width: 100vw;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 0;
         }
 
         .text-large {
@@ -85,6 +102,7 @@ export let scene2 = `
         <canvas
             id="particleCanvas"
         ></canvas>
+        <canvas id="gradientCanvas"></canvas>
 
         <div class="audio-controls">
           <input

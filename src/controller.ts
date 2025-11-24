@@ -1,3 +1,4 @@
+import { renderGradient } from "./glGradient";
 import { pauseIcon, playIcon } from "./html/icons";
 import { Particle } from "./Particle";
 import { state } from "./state";
@@ -188,20 +189,7 @@ export function beginShow() {
 }
 
 export function updateGradients(amps: number[]) {
-    let backgroundColorString = "radial-gradient(circle at center,";
-    amps.forEach((amp, index) => {
-        const intensity = amp / 255;
-        let r, g, b;
-        r = Math.round(140 * intensity);
-        g = Math.round(100 * intensity);
-        b = 255;
-
-        const multiplier = 10;
-        const alpha = Math.log(1 + (multiplier * intensity)) / Math.log(1 + multiplier);
-        backgroundColorString += ` rgba(${r}, ${g}, ${b}, ${alpha}) ${Math.round((index / amps.length) * 140)}%,`
-    });
-    backgroundColorString += " rgba(0, 0, 0, 0) 140%)";
-    document.getElementById('scene2')!.style.background = backgroundColorString;
+    renderGradient(amps);
 }
 
 export function updateMusicIconProperties(beatIntensity: { current: number; prev: number }) {

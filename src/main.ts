@@ -1,4 +1,5 @@
 import { beginShow, hideScene1, initializeAudioControls, initializeCanvas } from './controller';
+import { initWebGLGradient } from './glGradient';
 import { pauseIcon } from './html/icons';
 import { scene1 } from './html/scene1';
 import { scene2 } from './html/scene2';
@@ -48,6 +49,7 @@ function render() {
       
       document.getElementById("playPauseButton")!.innerHTML = pauseIcon;
       initializeCanvas();
+      initWebGLGradient();
       initializeAudioControls();
       beginShow();
     }
