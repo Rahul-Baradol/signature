@@ -39,6 +39,12 @@ export let scene2 = `
             z-index: 0;
         }
 
+        #helperCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
         .text-large {
             font-size: 30px;
         }
@@ -104,6 +110,9 @@ export let scene2 = `
         ></canvas>
         <canvas
             id="gradientCanvas"
+        ></canvas>
+        <canvas
+            id="helperCanvas"
         ></canvas>
 
         <div class="audio-controls">

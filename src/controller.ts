@@ -27,18 +27,29 @@ export function initializeCanvas() {
         }
     }
 
-    function animate() {
-        particleCanvasContext.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
-        gradientCanvasContext.clearRect(0, 0, gradientCanvas.width, gradientCanvas.height);
+    const gradientTex = document.getElementById("helperCanvas") as HTMLCanvasElement;
+    gradientTex.width = 1;
+    gradientTex.height = 256;       // number of stops
+    const gctx = gradientTex.getContext('2d')!;
 
-        const cx = gradientCanvas.width / 2;
-        const cy = gradientCanvas.height / 2;
+    function updateGradientTexture(amps: number[]) {
+        const h = gradientTex.height;
+        gctx.clearRect(0, 0, 1, h);
 
-        const amps = state.getAmps();
-        const maxRadius = Math.max(cx, cy) * 1.4;
-        const grad = gradientCanvasContext.createRadialGradient(cx, cy, 0, cx, cy, maxRadius);
+        if (!amps || amps.length === 0) {
+            // make fully transparent if no data
+            gctx.fillStyle = "rgba(0,0,0,0)";
+            gctx.fillRect(0, 0, 1, h);
+            return;
+        }
 
-        amps.forEach((amp, index) => {
+        // map pixel row -> amps index with inclusive endpoints
+        for (let i = 0; i < h; i++) {
+            // normalized t in [0,1]
+            const t = i / (h - 1);
+            // map to amps index (inclusive)
+            const ampIndex = Math.min(amps.length - 1, Math.floor(t * (amps.length - 1)));
+            const amp = amps[ampIndex] ?? 0;
             const intensity = amp / 255;
 
             const r = Math.round(140 * intensity);
@@ -48,16 +59,47 @@ export function initializeCanvas() {
             const multiplier = 10;
             const alpha = Math.log(1 + multiplier * intensity) / Math.log(1 + multiplier);
 
-            const stopPos = (index / amps.length) * 1.0; // normalized 0 → 1
+            gctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+            gctx.fillRect(0, i, 1, 1);
+        }
+    }
 
-            grad.addColorStop(stopPos, `rgba(${r}, ${g}, ${b}, ${alpha})`);
-        });
+    function drawGradientToMainCanvas() {
+        gradientCanvasContext.clearRect(0, 0, gradientCanvas.width, gradientCanvas.height);
 
-        grad.addColorStop(1, "rgba(0,0,0,0)");
+        const cx = gradientCanvas.width / 2;
+        const cy = gradientCanvas.height / 2;
+        const maxRadius = Math.max(cx, cy);
 
-        gradientCanvasContext.fillStyle = grad;
-        gradientCanvasContext.fillRect(0, 0, gradientCanvas.width, gradientCanvas.height);
+        // read tex pixels once
+        const tex = gctx.getImageData(0, 0, 1, gradientTex.height).data;
+        const steps = gradientTex.height;
 
+        // draw from outer -> inner so smaller circles are on top
+        for (let i = steps - 1; i >= 0; i--) {
+            const t = i / (steps - 1);
+            const radius = t * maxRadius;
+
+            const r = tex[i * 4 + 0];
+            const g = tex[i * 4 + 1];
+            const b = tex[i * 4 + 2];
+            const a = tex[i * 4 + 3] / 255;
+
+            // skip fully transparent rows (saves work)
+            if (a === 0) continue;
+
+            gradientCanvasContext.fillStyle = `rgba(${r}, ${g}, ${b}, ${a})`;
+            gradientCanvasContext.beginPath();
+            gradientCanvasContext.arc(cx, cy, radius, 0, Math.PI * 2);
+            gradientCanvasContext.fill();
+        }
+    }
+
+
+
+
+    function animate() {
+        particleCanvasContext.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
         spawnParticle();
 
         state.particles.forEach((p, i) => {
@@ -68,6 +110,9 @@ export function initializeCanvas() {
                 state.particles.splice(i, 1);
             }
         });
+
+        updateGradientTexture(state.getAmps());  // cheap
+        drawGradientToMainCanvas();              // extremely fast
 
         requestAnimationFrame(animate);
     }
