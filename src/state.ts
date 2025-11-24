@@ -1,4 +1,4 @@
-import { updateAudioControls, updateCanvas, updateGradients, updateMusicIconProperties } from "./controller";
+import { updateAudioControls, updateCanvas, updateMusicIconProperties } from "./controller";
 import type { Particle } from "./Particle";
 
 class State {
@@ -72,7 +72,7 @@ class State {
 
     setAmps(ampsArray: number[]) {
         this.amps = ampsArray;
-        updateGradients(this.amps);
+        // updateGradients(this.amps);
     }
 
     getAmps() {

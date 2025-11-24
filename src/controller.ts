@@ -10,19 +10,53 @@ export function hideScene1() {
 }
 
 export function initializeCanvas() {
-    const canvas = document.getElementById("particleCanvas") as HTMLCanvasElement;
-    const context = canvas.getContext("2d")!;
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
+    const particleCanvas = document.getElementById("particleCanvas") as HTMLCanvasElement;
+    const gradientCanvas = document.getElementById("gradientCanvas") as HTMLCanvasElement;
+
+    const particleCanvasContext = particleCanvas.getContext("2d")!;
+    particleCanvas.width = particleCanvas.offsetWidth;
+    particleCanvas.height = particleCanvas.offsetHeight;
+
+    const gradientCanvasContext = gradientCanvas.getContext("2d")!;
+    gradientCanvas.width = gradientCanvas.offsetWidth;
+    gradientCanvas.height = gradientCanvas.offsetHeight;
 
     function spawnParticle() {
         if (state.particles.length < 200) {
-            state.particles.push(new Particle(canvas, context));
+            state.particles.push(new Particle(particleCanvas, particleCanvasContext));
         }
     }
 
     function animate() {
-        context.clearRect(0, 0, canvas.width, canvas.height);
+        particleCanvasContext.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+        gradientCanvasContext.clearRect(0, 0, gradientCanvas.width, gradientCanvas.height);
+
+        const cx = gradientCanvas.width / 2;
+        const cy = gradientCanvas.height / 2;
+
+        const amps = state.getAmps();
+        const maxRadius = Math.max(cx, cy) * 1.4;
+        const grad = gradientCanvasContext.createRadialGradient(cx, cy, 0, cx, cy, maxRadius);
+
+        amps.forEach((amp, index) => {
+            const intensity = amp / 255;
+
+            const r = Math.round(140 * intensity);
+            const g = Math.round(100 * intensity);
+            const b = 255;
+
+            const multiplier = 10;
+            const alpha = Math.log(1 + multiplier * intensity) / Math.log(1 + multiplier);
+
+            const stopPos = (index / amps.length) * 1.0; // normalized 0 → 1
+
+            grad.addColorStop(stopPos, `rgba(${r}, ${g}, ${b}, ${alpha})`);
+        });
+
+        grad.addColorStop(1, "rgba(0,0,0,0)");
+
+        gradientCanvasContext.fillStyle = grad;
+        gradientCanvasContext.fillRect(0, 0, gradientCanvas.width, gradientCanvas.height);
 
         spawnParticle();
 
@@ -42,8 +76,10 @@ export function initializeCanvas() {
 
     function setCanvasSize() {
         state.particles = [];
-        canvas.width = canvas.offsetWidth;
-        canvas.height = canvas.offsetHeight;
+        particleCanvas.width = particleCanvas.offsetWidth;
+        particleCanvas.height = particleCanvas.offsetHeight;
+        gradientCanvas.width = gradientCanvas.offsetWidth;
+        gradientCanvas.height = gradientCanvas.offsetHeight;
     }
 
     window.addEventListener("resize", setCanvasSize);
@@ -187,22 +223,22 @@ export function beginShow() {
     }
 }
 
-export function updateGradients(amps: number[]) {
-    let backgroundColorString = "radial-gradient(circle at center,";
-    amps.forEach((amp, index) => {
-        const intensity = amp / 255;
-        let r, g, b;
-        r = Math.round(140 * intensity);
-        g = Math.round(100 * intensity);
-        b = 255;
+// export function updateGradients(amps: number[]) {
+//     let backgroundColorString = "radial-gradient(circle at center,";
+//     amps.forEach((amp, index) => {
+//         const intensity = amp / 255;
+//         let r, g, b;
+//         r = Math.round(140 * intensity);
+//         g = Math.round(100 * intensity);
+//         b = 255;
 
-        const multiplier = 10;
-        const alpha = Math.log(1 + (multiplier * intensity)) / Math.log(1 + multiplier);
-        backgroundColorString += ` rgba(${r}, ${g}, ${b}, ${alpha}) ${Math.round((index / amps.length) * 140)}%,`
-    });
-    backgroundColorString += " rgba(0, 0, 0, 0) 140%)";
-    document.getElementById('scene2')!.style.background = backgroundColorString;
-}
+//         const multiplier = 10;
+//         const alpha = Math.log(1 + (multiplier * intensity)) / Math.log(1 + multiplier);
+//         backgroundColorString += ` rgba(${r}, ${g}, ${b}, ${alpha}) ${Math.round((index / amps.length) * 140)}%,`
+//     });
+//     backgroundColorString += " rgba(0, 0, 0, 0) 140%)";
+//     document.getElementById('scene2')!.style.background = backgroundColorString;
+// }
 
 export function updateMusicIconProperties(beatIntensity: { current: number; prev: number }) {
     const multipler = 10;
