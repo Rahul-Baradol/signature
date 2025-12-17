@@ -20,6 +20,7 @@ a {
   color: #707070;
   text-decoration: inherit;
 }
+
 a:hover {
   color: #707070;
 }
@@ -49,10 +50,28 @@ button {
   cursor: pointer;
   transition: border-color 0.25s;
 }
+
 button:hover {
   border-color: #707070;
 }
+
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
+}
+
+@keyframes drift {
+
+  0%,
+  100% {
+    transform: translateY(0px) rotateX(35deg) rotateY(-35deg);
+  }
+
+  50% {
+    transform: translateY(-30px) rotateX(32deg) rotateY(-30deg);
+  }
+}
+
+.lg\:right-10\% {
+  animation: drift 12s ease-in-out infinite;
 }
