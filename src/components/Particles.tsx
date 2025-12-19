@@ -106,28 +106,8 @@ const Particles = ({ beatIntensity }: { beatIntensity: any }) => {
         const pushDirection = (beatIntensity.current > (0.5 * beatIntensity.prev)) ? 1 : -1;
 
         if (pushDirection === 1) {
-            let countOfParticlesToAffect;
-            if (beatIntensity.current <= 0.25) {
-                countOfParticlesToAffect = 1;
-            } else if (beatIntensity.current <= 0.5) {
-                countOfParticlesToAffect = 2;
-            } else {
-                countOfParticlesToAffect = 3;
-            }
-    
-            switch (true) {
-                case (beatIntensity.current <= 0.25):
-                    countOfParticlesToAffect = 1;
-                    break;
-    
-                case (beatIntensity.current <= 0.5):
-                    countOfParticlesToAffect = 2;
-                    break;
-    
-                default:
-                    countOfParticlesToAffect = 3;
-            }
-    
+            let countOfParticlesToAffect = 50;
+          
             for (let i = 0; i < countOfParticlesToAffect; i++) {
                 const randomIndex = Math.floor(Math.random() * particles.current.length);
                 particles.current[randomIndex].pushDirection = pushDirection;
