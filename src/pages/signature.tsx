@@ -68,7 +68,6 @@ export default function BeatVisualizer() {
 
       {file && (
         <AudioControls
-          file={file}
           audioRef={audioRef}
           isPlaying={isPlaying}
           currentTime={currentTime}

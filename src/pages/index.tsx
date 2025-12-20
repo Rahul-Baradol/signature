@@ -33,8 +33,8 @@ const Landing: React.FC = () => {
             </span>
           </h1>
           
-          <p className="max-w-sm text-slate-400 text-lg font-light mb-12 leading-relaxed border-l border-sky-500/30 pl-6">
-            Immerse yourself in a captivating song visualizer experience.
+          <p className="max-w-sm text-slate-400 text-lg font-light mb-12 leading-relaxed ">
+            Immerse yourself in a captivating visualization.
           </p>
 
           <div className="flex items-center gap-8">
@@ -44,7 +44,7 @@ const Landing: React.FC = () => {
                 whileTap={{ scale: 0.98 }}
                 className="relative z-10 px-12 py-5 bg-white text-black font-bold text-xs tracking-widest uppercase rounded-full transition-colors group-hover:bg-sky-400"
               >
-                Launch App
+                Try
               </motion.div>
               {/* Button Shadow/Glow */}
               <div className="absolute inset-0 bg-sky-500/20 blur-xl rounded-full group-hover:bg-sky-500/40 transition-all" />

@@ -2,14 +2,13 @@ import { FiPlay } from "react-icons/fi";
 import { CiPause1 } from "react-icons/ci";
 
 interface Props {
-  file: File;
   audioRef: React.MutableRefObject<HTMLAudioElement | null>;
   isPlaying: boolean;
   currentTime: number;
   onToggle: () => void;
 }
 
-export const AudioControls = ({ file, audioRef, isPlaying, currentTime, onToggle }: Props) => {
+export const AudioControls = ({ audioRef, isPlaying, currentTime, onToggle }: Props) => {
   const duration = audioRef.current?.duration || 0;
 
   const formatTime = (time: number) => {
