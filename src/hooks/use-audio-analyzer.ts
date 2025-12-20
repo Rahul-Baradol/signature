@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { calculateAmpsForPerformanceMode, PerformanceMode } from "../utils/performance-mode-util";
 
 export const useAudioAnalyzer = (file: File | null) => {
     const [isPlaying, setIsPlaying] = useState(false);
@@ -86,22 +87,7 @@ export const useAudioAnalyzer = (file: File | null) => {
                         }
                     }
 
-                    if (avg <= 0.5) {
-                        setAmps(
-                            Array.from({ length: dataArray.length / 4 }, (_, i) =>
-                                (dataArray[i * 4] + dataArray[i * 4 + 1] + dataArray[i * 4 + 2] + dataArray[i * 4 + 3]) / 4
-                            )
-                        );
-                    } else {
-                        setAmps(
-                            Array.from({ length: Math.ceil(dataArray.length / 3) }, (_, i) => {
-                                const start = i * 3;
-                                const end = Math.min(start + 3, dataArray.length);
-                                const sum = dataArray.slice(start, end).reduce((acc, val) => acc + val, 0);
-                                return sum / (end - start);
-                            })
-                        );
-                    }
+                    setAmps(calculateAmpsForPerformanceMode(Array.from(dataArray), PerformanceMode.High));
 
                     setIntensity((prev) => {
                         const pushDirection = avg > prev.current ? 1 : -1;
