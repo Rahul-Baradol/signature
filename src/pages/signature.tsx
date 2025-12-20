@@ -56,7 +56,7 @@ export default function BeatVisualizer() {
         <div className="flex flex-col items-center justify-around bg-transparent">
           <div 
             style={musicIconStyle} 
-            className="text-[30px] transition-all duration-750 ease-out font-bold text-white"
+            className="text-[30px] transition-all duration-1500 ease-out font-bold text-white"
           >
             <SlMusicToneAlt />
           </div>
