@@ -56,7 +56,7 @@ class Particle {
     }
 }
 
-const Particles = ({ beatIntensity }: { beatIntensity: any }) => {
+export const Particles = ({ beatIntensity }: { beatIntensity: any }) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const particles = useRef<Particle[]>([]);
 
@@ -142,5 +142,3 @@ const Particles = ({ beatIntensity }: { beatIntensity: any }) => {
         />
     );
 };
-
-export default Particles;

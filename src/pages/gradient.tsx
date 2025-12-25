@@ -2,8 +2,8 @@ import { SlMusicToneAlt } from "react-icons/sl";
 
 import { getMusicTransform, getBackgroundGradient } from "@/utils/visualizer-util";
 
-import Particles from "@/components/particles";
 import { useAppStore } from "@/store/use-app-store";
+import { Particles } from "@/components/particles.tsx";
 
 export default function GradientDesign() {
   const { amps, intensity } = useAppStore();
