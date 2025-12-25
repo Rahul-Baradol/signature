@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/use-app-store';
+import { SocialSidebar } from '@/components/social-sidebar';
 
 const Landing: React.FC = () => {
   const { setFile } = useAppStore();
@@ -13,6 +14,8 @@ const Landing: React.FC = () => {
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f2937_1px,transparent_1px),linear-gradient(to_bottom,#1f2937_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-[0.15]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(14,165,233,0.08),transparent_50%)]" />
       </div>
+
+      <SocialSidebar />
 
       <div className="relative z-20 w-full lg:w-1/2 px-8 md:px-20 lg:ml-24">
         <motion.div
@@ -105,8 +108,7 @@ const Landing: React.FC = () => {
           <div className="flex gap-4 items-center">
             <div className="w-10 h-10 rounded-full border-2 border-sky-500 border-t-transparent animate-spin" />
             <div>
-              <p className="text-[10px] uppercase tracking-widest text-slate-500">Frequency Response</p>
-              <p className="text-sm font-mono tracking-tighter">44.1kHz Active</p>
+              <p className="text-[10px] uppercase tracking-widest text-slate-500">Bouncing...</p>
             </div>
           </div>
         </motion.div>

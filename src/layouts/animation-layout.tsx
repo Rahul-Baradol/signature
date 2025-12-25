@@ -154,7 +154,7 @@ export const AnimationLayout = () => {
 
   return (
     <div className="relative bg-transparent flex">
-      <nav className="fixed top-5 left-6 z-50 flex flex-col items-center gap-4 p-3 rounded-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] border border-white/20">
+      <nav className="fixed top-5 left-6 z-50 flex flex-col items-center gap-4 px-2.5 py-5 rounded-full shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] border border-white/20">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
 
@@ -164,16 +164,16 @@ export const AnimationLayout = () => {
                 onClick={() => navigate(item.path)}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
-                className={`relative w-12 h-12 flex items-center justify-center rounded-xl transition-colors duration-200 bg-transparent ${isActive ? 'text-white' : 'text-gray-400 hover:text-white'}`}
+                className={`relative w-12 h-12 flex items-center justify-center rounded-full transition-colors duration-200 bg-transparent ${isActive ? 'text-white' : 'text-gray-400 hover:text-white'}`}
               >
                 <div>
-                  <item.icon />
+                  <item.icon width={20} height={20} />
                 </div>
 
                 {isActive ? (
                   <motion.div
                     layoutId="activeDot"
-                    className="absolute w-12 h-12 border border-white-500 rounded-lg"
+                    className="absolute w-12 h-12 border border-white-500 rounded-full"
                   />
                 ) : <></>}
               </motion.button>

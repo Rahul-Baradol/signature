@@ -18,7 +18,7 @@ export const SocialSidebar = () => {
   ];
 
   return (
-    <div className="absolute top-5 right-5 flex flex-col gap-4">
+    <div className="absolute top-5 right-5 flex flex-col gap-4 z-5 px-3 py-4 rounded-full bg-transparent/20 backdrop-blur-md border border-white/30">
       {socialLinks.map((link, index) => (
         <a
           key={index}
