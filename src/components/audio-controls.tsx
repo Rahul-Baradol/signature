@@ -18,7 +18,7 @@ export const AudioControls = ({ audioRef, isPlaying, currentTime, onToggle }: Pr
   };
 
   return (
-    <div className="absolute bottom-5 w-11/12 max-w-3xl flex flex-row items-center justify-center gap-4 opacity-40 hover:opacity-100 transition-opacity bg-black/20 p-4 rounded-xl backdrop-blur-sm">
+    <div className="bottom-5 w-11/12 max-w-3xl flex flex-row items-center justify-center gap-4 opacity-40 hover:opacity-100 transition-opacity bg-black/20 p-4 rounded-xl backdrop-blur-sm">
       <input
         type="range"
         min={0}

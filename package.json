@@ -11,10 +11,15 @@
   },
   "dependencies": {
     "@distube/ytdl-core": "^4.16.12",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.4.2",
+    "@react-three/postprocessing": "^3.0.4",
     "@tailwindcss/vite": "^4.1.13",
     "@tsparticles/engine": "^3.9.1",
     "@tsparticles/react": "^3.0.0",
+    "@types/three": "^0.182.0",
     "chart.js": "^4.5.0",
+    "lucide-react": "^0.562.0",
     "motion": "^12.23.26",
     "react": "^19.1.1",
     "react-chartjs-2": "^5.3.0",
@@ -23,7 +28,9 @@
     "react-router-dom": "^7.10.1",
     "react-tsparticles": "^2.12.2",
     "tailwindcss": "^4.1.13",
-    "tsparticles": "^3.9.1"
+    "three": "^0.182.0",
+    "tsparticles": "^3.9.1",
+    "zustand": "^5.0.9"
   },
   "devDependencies": {
     "@eslint/js": "^9.35.0",

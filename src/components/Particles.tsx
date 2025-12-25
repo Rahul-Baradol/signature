@@ -103,21 +103,25 @@ const Particles = ({ beatIntensity }: { beatIntensity: any }) => {
     }, []);
 
     useEffect(() => {
-        const pushDirection = (beatIntensity.current > (0.5 * beatIntensity.prev)) ? 1 : -1;
-
-        if (pushDirection === 1) {
-            let countOfParticlesToAffect = 50;
-          
-            for (let i = 0; i < countOfParticlesToAffect; i++) {
-                const randomIndex = Math.floor(Math.random() * particles.current.length);
-                particles.current[randomIndex].pushDirection = pushDirection;
-                particles.current[randomIndex].beatIntensity = beatIntensity.current;
+        if (particles.current) {
+            const pushDirection = (beatIntensity.current > (0.5 * beatIntensity.prev)) ? 1 : -1;
+    
+            if (pushDirection === 1) {
+                let countOfParticlesToAffect = 50;
+              
+                for (let i = 0; i < countOfParticlesToAffect; i++) {
+                    const randomIndex = Math.floor(Math.random() * particles.current.length);
+                    if (randomIndex < particles.current.length) {
+                        particles.current[randomIndex].pushDirection = pushDirection;
+                        particles.current[randomIndex].beatIntensity = beatIntensity.current;
+                    }
+                }
+            } else {
+                particles.current.forEach(p => {
+                    p.pushDirection = pushDirection;
+                    p.beatIntensity = beatIntensity.current;
+                });
             }
-        } else {
-            particles.current.forEach(p => {
-                p.pushDirection = pushDirection;
-                p.beatIntensity = beatIntensity.current;
-            });
         }
     }, [beatIntensity]);
 
