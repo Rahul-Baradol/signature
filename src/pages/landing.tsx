@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/use-app-store';
@@ -7,6 +7,7 @@ import { SocialSidebar } from '@/components/social-sidebar';
 const Landing: React.FC = () => {
   const { setFile } = useAppStore();
   const navigate = useNavigate();
+  const [videoDownloading, setVideoDownloading] = useState(true);
 
   return (
     <div className="relative min-h-screen w-screen bg-[#030712] text-slate-50 flex items-center overflow-hidden selection:bg-sky-500/30">
@@ -87,12 +88,20 @@ const Landing: React.FC = () => {
       >
         <div className="relative p-4 bg-white/5 backdrop-blur-3xl rounded-3xl border border-white/10 shadow-2xl">
           <div className="relative rounded-2xl overflow-hidden border border-white/5">
+            {videoDownloading ? (
+              <div className="absolute inset-0 z-10 overflow-hidden">
+                <div className="absolute inset-0 bg-[#030712]" />
+                <div className="absolute inset-0 animate-sweep bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+              </div>
+            ) : <></>}
+
             <video
               autoPlay
               loop
               muted
               playsInline
-              className="w-full h-auto mix-blend-screen opacity-80"
+              onCanPlay={() => setVideoDownloading(false)}
+              className={`w-full h-auto mix-blend-screen transition-opacity duration-500 ${videoDownloading ? "opacity-0" : "opacity-80"}`}
             >
               <source src="/signature-3.mp4" type="video/mp4" />
             </video>
