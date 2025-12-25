@@ -1,9 +1,9 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { useAppStore } from '../store/use-app-store';
+import { useAppStore } from '@/store/use-app-store';
 import { useEffect, useRef } from 'react';
-import { AudioControls } from '../components/audio-controls';
-import { SocialSidebar } from '../components/social-sidebar';
-import { calculateAmpsForPerformanceMode, PerformanceMode } from '../utils/performance-mode-util';
+import { AudioControls } from '@/components/audio-controls';
+import { SocialSidebar } from '@/components/social-sidebar';
+import { calculateAmpsForPerformanceMode, PerformanceMode } from '@/utils/performance-mode-util';
 import { motion } from 'framer-motion';
 import * as Icons from 'lucide-react';
 

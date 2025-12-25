@@ -1,22 +1,18 @@
-import portfolio from '../../public/me.svg'
-import github from '../../public/github.png'
-import linkedin from '../../public/linkedin2.png'
-
 export const SocialSidebar = () => {
   const socialLinks = [
     {
       href: "https://rahulbaradol.in",
-      icon: portfolio,
+      icon: "/me.svg",
       alt: "Portfolio",
     },
     {
       href: "https://github.com/Rahul-Baradol/signature",
-      icon: github,
+      icon: "/github.png",
       alt: "GitHub",
     },
     {
       href: "https://www.linkedin.com/in/rahul-baradol-22723b289/",
-      icon: linkedin,
+      icon: "/linkedin2.png",
       alt: "LinkedIn",
     },
   ];

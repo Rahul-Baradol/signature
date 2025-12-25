@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { useAppStore } from '../store/use-app-store';
+import { useAppStore } from '@/store/use-app-store';
 
 const Landing: React.FC = () => {
   const { setFile } = useAppStore();

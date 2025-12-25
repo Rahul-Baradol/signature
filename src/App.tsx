@@ -1,8 +1,8 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Landing from './pages/landing';
-import GradientDesign from './pages/gradient';
-import ConcetricRingsDesign from './pages/concentric-rings';
-import { AnimationLayout } from './layouts/animation-layout';
+import Landing from '@/pages/landing';
+import GradientDesign from '@/pages/gradient';
+import ConcetricRingsDesign from '@/pages/concentric-rings';
+import { AnimationLayout } from '@/layouts/animation-layout';
 
 function App() {
     return (

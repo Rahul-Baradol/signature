@@ -4,8 +4,8 @@ import { PerspectiveCamera, OrbitControls } from "@react-three/drei";
 
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 
-import { ConcentricRings } from "../components/concentric-rings";
-import { useAppStore } from "../store/use-app-store";
+import { ConcentricRings } from "@/components/concentric-rings";
+import { useAppStore } from "@/store/use-app-store";
 
 export default function ConcetricRingsDesign() {
   const { amps } = useAppStore();
