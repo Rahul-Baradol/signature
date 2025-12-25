@@ -58,7 +58,7 @@ const Landing: React.FC = () => {
                     const file = e.target.files?.[0];
                     if (file) {
                       setFile(file);
-                      navigate('/signature/concentric-rings');
+                      navigate('/signature/gradient');
                     }
                   }}
                 />
