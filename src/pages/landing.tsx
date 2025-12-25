@@ -87,9 +87,9 @@ const Landing: React.FC = () => {
         transition={{ duration: 2, ease: [0.16, 1, 0.3, 1] }}
       >
         <div className="relative p-4 bg-white/5 backdrop-blur-3xl rounded-3xl border border-white/10 shadow-2xl">
-          <div className="relative rounded-2xl overflow-hidden border border-white/5">
+          <div className="relative rounded-2xl h-[60vh] overflow-hidden border border-white/5">
             {videoDownloading ? (
-              <div className="absolute inset-0 z-10 overflow-hidden">
+              <div className="w-full h-full inset-0 z-10 overflow-hidden">
                 <div className="absolute inset-0 bg-[#030712]" />
                 <div className="absolute inset-0 animate-sweep bg-gradient-to-r from-transparent via-white/20 to-transparent" />
               </div>
@@ -101,7 +101,7 @@ const Landing: React.FC = () => {
               muted
               playsInline
               onCanPlay={() => setVideoDownloading(false)}
-              className={`w-full h-auto mix-blend-screen transition-opacity duration-500 ${videoDownloading ? "opacity-0" : "opacity-80"}`}
+              className={`w-full h-full object-cover mix-blend-screen transition-opacity duration-500 ${videoDownloading ? "opacity-0" : "opacity-80"}`}
             >
               <source src="/signature-3.mp4" type="video/mp4" />
             </video>
