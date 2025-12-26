@@ -28,11 +28,9 @@ export const SocialSidebar = () => {
           className="border-2 border-violet-600 opacity-50 hover:opacity-100 transition-opacity w-fit h-fit rounded-full overflow-hidden flex items-center justify-center bg-black/20"
         >
           <img 
-            width={35} 
-            height={35} 
             src={link.icon} 
             alt={link.alt} 
-            className="object-cover"
+            className="object-cover w-6 md:w-8 h-auto"
           />
         </a>
       ))}

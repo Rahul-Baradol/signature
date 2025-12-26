@@ -3,14 +3,37 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/use-app-store';
 import { SocialSidebar } from '@/components/social-sidebar';
+import { Play, ArrowRight } from 'lucide-react'; // Assuming lucide-react is installed
+
+const SAMPLES = [
+  { id: 1, title: 'Ecstatic Dissolve', artist: 'Me', file: '/mysongs/ecstatic-dissolve.mp3' },
+  { id: 2, title: 'Signature', artist: 'Me', file: '/mysongs/signature.mp3' },
+];
 
 const Landing: React.FC = () => {
   const { setFile } = useAppStore();
   const navigate = useNavigate();
   const [videoDownloading, setVideoDownloading] = useState(true);
+  const [loadingSample, setLoadingSample] = useState<number | null>(null);
+
+  const handleSampleSelect = async (sample: typeof SAMPLES[0]) => {
+    setLoadingSample(sample.id);
+    try {
+      const response = await fetch(sample.file);
+      const blob = await response.blob();
+      const file = new File([blob], `${sample.title}.mp3`, { type: 'audio/mpeg' });
+
+      setFile(file);
+      // Small delay for the "feel" of the interaction
+      setTimeout(() => navigate('/signature/gradient'), 400);
+    } catch (error) {
+      console.error("Error loading sample:", error);
+      setLoadingSample(null);
+    }
+  };
 
   return (
-    <div className="relative min-h-screen w-screen bg-[#030712] text-slate-50 flex items-center overflow-hidden selection:bg-sky-500/30">
+    <div className="relative min-h-screen w-screen bg-[#030712] text-slate-50 flex items-center overflow-hidden selection:bg-sky-500/30 font-sans">
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f2937_1px,transparent_1px),linear-gradient(to_bottom,#1f2937_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-[0.15]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(14,165,233,0.08),transparent_50%)]" />
@@ -28,9 +51,9 @@ const Landing: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="inline-block text-sky-400 text-xs font-bold tracking-[0.3em] uppercase mb-4"
+            className="inline-block text-sky-400 text-[10px] font-bold tracking-[0.4em] uppercase mb-4"
           >
-            Try your signature
+            Digital Audio Visualizer
           </motion.span>
 
           <h1 className="text-7xl md:text-9xl font-black tracking-tight mb-8 leading-[0.85]">
@@ -40,41 +63,70 @@ const Landing: React.FC = () => {
             </span>
           </h1>
 
-          <p className="max-w-sm text-slate-400 text-lg font-light mb-6 leading-relaxed ">
+          <p className="max-w-sm text-slate-400 text-lg font-light mb-10 leading-relaxed ">
             Immerse yourself in a captivating visualization.
           </p>
 
-          <div className="mb-8 flex items-center gap-3 px-4 py-3 bg-blue-500/10 border border-blue-500/20 rounded-lg w-fit">
-            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-            <p className="text-xs text-red-200/70 font-medium tracking-wide">
-              Warning: Contains flashing lights & patterns
-            </p>
-          </div>
+          <div className="flex flex-col gap-10">
+            {/* Primary Action */}
+            <div className="flex items-center gap-8">
+              <div className="group relative">
+                <label className="cursor-pointer">
+                  <input
+                    type="file"
+                    accept="audio/mp3"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setFile(file);
+                        navigate('/signature/gradient');
+                      }
+                    }}
+                  />
+                  <motion.div
+                    whileHover={{ scale: 1.05, backgroundColor: '#38bdf8' }}
+                    whileTap={{ scale: 0.95 }}
+                    className="relative z-10 px-10 py-5 bg-white text-black font-bold text-[11px] tracking-widest uppercase rounded-full transition-all duration-300 group-hover:shadow-[0_0_30px_rgba(56,189,248,0.4)]"
+                  >
+                    Upload MP3
+                  </motion.div>
+                </label>
+              </div>
+            </div>
 
-          <div className="flex items-center gap-8">
-            <div className="group relative">
-              <label className="cursor-pointer">
-                <input
-                  type="file"
-                  accept="audio/mp3"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      setFile(file);
-                      navigate('/signature/gradient');
-                    }
-                  }}
-                />
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="relative z-10 px-12 py-5 bg-white text-black font-bold text-xs tracking-widest uppercase rounded-full transition-colors group-hover:bg-sky-400"
-                >
-                  Upload MP3
-                </motion.div>
-              </label>
-              <div className="absolute inset-0 bg-sky-500/20 blur-xl rounded-full group-hover:bg-sky-500/40 transition-all" />
+            <div className="flex flex-col gap-5">
+              <div className="flex items-center gap-4 mb-2">
+                <div className="h-px w-8 bg-slate-700" />
+                <span className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Quick Start with My Production</span>
+                <div className="h-px w-8 bg-slate-700" />
+              </div>
+
+              <div className="flex flex-wrap gap-4">
+                {SAMPLES.map((sample, idx) => (
+                  <motion.button
+                    key={sample.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.7 + (idx * 0.1) }}
+                    onClick={() => handleSampleSelect(sample)}
+                    disabled={loadingSample !== null}
+                    className="group relative flex items-center gap-4 px-5 py-3 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all duration-300 cursor-pointer"
+                  >
+                    <div className="relative flex items-center justify-center w-8 h-8 rounded-full bg-sky-500/20 text-sky-400 group-hover:bg-sky-500 group-hover:text-black transition-colors">
+                      {loadingSample === sample.id ? (
+                        <div className="w-4 h-4 border-2 border-current border-t-transparent animate-spin rounded-full" />
+                      ) : (
+                        <Play size={14} fill="currentColor" />
+                      )}
+                    </div>
+                    <div className="text-left">
+                      <p className="text-xs font-bold tracking-wide text-slate-200 group-hover:text-white transition-colors">{sample.title}</p>
+                    </div>
+                    <ArrowRight size={14} className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-sky-400" />
+                  </motion.button>
+                ))}
+              </div>
             </div>
           </div>
         </motion.div>
@@ -109,18 +161,7 @@ const Landing: React.FC = () => {
           </div>
         </div>
 
-        <motion.div
-          animate={{ y: [0, -20, 0] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -bottom-12 -left-12 p-6 bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-2xl hidden lg:block"
-        >
-          <div className="flex gap-4 items-center">
-            <div className="w-10 h-10 rounded-full border-2 border-sky-500 border-t-transparent animate-spin" />
-            <div>
-              <p className="text-[10px] uppercase tracking-widest text-slate-500">Bouncing...</p>
-            </div>
-          </div>
-        </motion.div>
+  
       </motion.div>
 
     </div>

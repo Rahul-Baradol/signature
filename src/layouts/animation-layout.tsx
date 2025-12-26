@@ -164,16 +164,16 @@ export const AnimationLayout = () => {
                 onClick={() => navigate(item.path)}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
-                className={`relative w-12 h-12 flex items-center justify-center rounded-full transition-colors duration-200 bg-transparent ${isActive ? 'text-white' : 'text-gray-400 hover:text-white'}`}
+                className={`relative w-6 h-6 md:w-12 md:h-12 flex items-center justify-center rounded-full transition-colors duration-200 bg-transparent ${isActive ? 'text-white' : 'text-gray-400 hover:text-white'}`}
               >
                 <div>
-                  <item.icon width={20} height={20} />
+                  <item.icon className='w-3 md:w-5 h-auto' />
                 </div>
 
                 {isActive ? (
                   <motion.div
                     layoutId="activeDot"
-                    className="absolute w-12 h-12 border border-white-500 rounded-full"
+                    className="absolute w-6 h-6 md:w-12 md:h-12 border border-white-500 rounded-full"
                   />
                 ) : <></>}
               </motion.button>
