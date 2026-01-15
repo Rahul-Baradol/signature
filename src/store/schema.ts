@@ -8,6 +8,7 @@ export type AppState = {
     isPlaying: boolean;
     amps: number[];
     currentTime: number;
+    currentFrame: number;
     intensity: Intensity;
     file: File | null;
 
@@ -15,6 +16,7 @@ export type AppState = {
     setIsPlaying: (isPlaying: boolean) => void;
     setAmps: (amps: number[]) => void;
     setCurrentTime: (currentTime: number) => void;
+    setCurrentFrame: (currentFrame: number) => void;
     setIntensity: (intensity: Intensity) => void;
     setFile: (file: File | null) => void;
 };

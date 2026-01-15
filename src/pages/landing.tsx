@@ -74,7 +74,7 @@ const Landing: React.FC = () => {
                 <label className="cursor-pointer">
                   <input
                     type="file"
-                    accept="audio/mp3"
+                    accept="audio/*"
                     className="hidden"
                     onChange={(e) => {
                       const file = e.target.files?.[0];

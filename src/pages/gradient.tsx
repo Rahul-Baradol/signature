@@ -19,7 +19,7 @@ export default function GradientDesign() {
   return (
     <div
       style={containerStyle}
-      className="w-screen h-screen flex flex-col gap-5 items-center justify-center transition-all relative overflow-hidden"
+      className="w-screen h-screen flex flex-col gap-5 items-center justify-center transition-all relative overflow-hidden duration-[33]"
     >
 
       <div className="flex flex-col items-center justify-around bg-transparent">
@@ -30,6 +30,7 @@ export default function GradientDesign() {
           <SlMusicToneAlt />
         </div>
         <Particles beatIntensity={intensity} />
+        {/* <AudioGradientCanvas amps={amps} /> */}
       </div>
     </div>
   );

@@ -6,19 +6,25 @@ import { SocialSidebar } from '@/components/social-sidebar';
 import { calculateAmpsForPerformanceMode, PerformanceMode } from '@/utils/performance-mode-util';
 import { motion } from 'framer-motion';
 import * as Icons from 'lucide-react';
+import { smoothStep } from '@/utils/math';
 
 export const AnimationLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { file, isPlaying, currentTime, intensity, setIsPlaying, setAmps, setCurrentTime, setIntensity } = useAppStore();
+  const { amps, file, isPlaying, currentTime, setCurrentFrame, intensity, setIsPlaying, setAmps, setCurrentTime, setIntensity } = useAppStore();
+
+  const frameMetaRef = useRef<{ sampleRate: number; hopSize: number; frameCount: number } | null>(null);
+  const intensityFramesRef = useRef<{ prev: number; current: number }[] | null>(null);
+  const ampsFramesRef = useRef<number[][] | null>(null);
+  const visualAmpsRef = useRef<number[][] | null>(null);
 
   const togglePlay = () => {
     if (!audioRef.current) {
       return;
     }
 
-    if (isPlaying) {
+    if (!audioRef.current.paused) {
       audioRef.current.pause();
       setIsPlaying(false);
     } else {
@@ -29,113 +35,207 @@ export const AnimationLayout = () => {
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
-  const analyzerRef = useRef<AnalyserNode | null>(null);
-  const historyRef = useRef<number[]>([]);
   const animationFrameRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
-    if (file) {
-      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      audioCtxRef.current = audioCtx;
+    if (!file) {
+      navigate('/');
+      return;
+    }
 
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const arrayBuffer = e.target?.result as ArrayBuffer;
-        const decodedData = await audioCtx.decodeAudioData(arrayBuffer);
+    let cancelled = false;
+    const audioCtx = new AudioContext();
+    audioCtxRef.current = audioCtx;
+
+    const reader = new FileReader();
+
+    reader.onload = async (e) => {
+      if (cancelled) return;
+
+      const decoded = await audioCtx.decodeAudioData(
+        e.target!.result as ArrayBuffer
+      );
+
+      const fftSize = 512;
+      const hopSize = fftSize / 2;
+      const sampleRate = decoded.sampleRate;
+      const frameCount = Math.floor(decoded.length / hopSize);
+
+      const intensityFrames: { prev: number; current: number }[] = [];
+      const ampsFrames: number[][] = [];
+
+      let prevIntensity = 0;
+      const history: number[] = [];
+
+      // Precompute frames offline
+      for (let i = 0; i < frameCount; i++) {
+        if (cancelled) break;
 
         const offlineCtx = new OfflineAudioContext(
-          decodedData.numberOfChannels,
-          decodedData.length,
-          decodedData.sampleRate
+          decoded.numberOfChannels,
+          fftSize,
+          sampleRate
         );
-        const offlineSource = offlineCtx.createBufferSource();
-        offlineSource.buffer = decodedData;
-        const offlineAnalyser = offlineCtx.createAnalyser();
-        offlineAnalyser.fftSize = 512;
-        offlineSource.connect(offlineAnalyser);
-        offlineAnalyser.connect(offlineCtx.destination);
-        offlineSource.start();
 
-        const audio = new Audio(URL.createObjectURL(file));
-        audioRef.current = audio;
-        const liveSource = audioCtx.createMediaElementSource(audio);
-        const liveAnalyser = audioCtx.createAnalyser();
-        liveAnalyser.fftSize = 512;
-        const dataArray = new Uint8Array(liveAnalyser.frequencyBinCount);
+        const buffer = offlineCtx.createBuffer(
+          decoded.numberOfChannels,
+          fftSize,
+          sampleRate
+        );
 
-        liveSource.connect(liveAnalyser);
-        liveAnalyser.connect(audioCtx.destination);
-        analyzerRef.current = liveAnalyser;
+        for (let ch = 0; ch < decoded.numberOfChannels; ch++) {
+          const channelData = decoded
+            .getChannelData(ch)
+            .subarray(i * hopSize, i * hopSize + fftSize);
+          buffer.copyToChannel(channelData, ch);
+        }
 
-        audio.play();
-        setIsPlaying(true);
+        const source = offlineCtx.createBufferSource();
+        source.buffer = buffer;
 
-        const process = () => {
-          if (!analyzerRef.current || !audioRef.current) return;
+        const analyser = offlineCtx.createAnalyser();
+        analyser.fftSize = fftSize;
 
-          setCurrentTime(audioRef.current.currentTime);
-          analyzerRef.current.getByteFrequencyData(dataArray);
+        source.connect(analyser);
+        analyser.connect(offlineCtx.destination);
+        source.start();
 
-          const lowCount = Math.floor(dataArray.length * 0.5);
-          const midCount = Math.floor(dataArray.length * 0.30);
+        await offlineCtx.startRendering();
 
-          const rmsRange = (arr: Uint8Array, start: number, end: number) => {
-            let sumSq = 0;
-            for (let i = Math.floor(start); i < Math.floor(end); i++) {
-              sumSq += arr[i];
-            }
-            return sumSq / (end - start);
-          };
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteFrequencyData(dataArray);
 
-          const avgLow = rmsRange(dataArray, 0, lowCount);
-          const avgMid = rmsRange(dataArray, lowCount, lowCount + midCount);
-          const avgHigh = rmsRange(dataArray, lowCount + midCount, dataArray.length);
+        const lowCount = Math.floor(dataArray.length * 0.5);
+        const midCount = Math.floor(dataArray.length * 0.3);
 
-          const eff = Math.max(avgLow, avgMid, avgHigh) / 255;
-
-          historyRef.current = [...historyRef.current, eff].slice(-60);
-
-          let avg = eff;
-          if (historyRef.current.length === 60) {
-            const minIntensity = Math.min(...historyRef.current);
-            const maxIntensity = Math.max(...historyRef.current);
-            if (maxIntensity - minIntensity == 0) {
-              avg = 0;
-            } else {
-              avg = (eff - minIntensity) / (maxIntensity - minIntensity);
-              avg = Math.min(Math.max(avg, 0), 1);
-            }
-          }
-
-          setAmps(calculateAmpsForPerformanceMode(Array.from(dataArray), PerformanceMode.High));
-
-          const pushDirection = avg > intensity.current ? 1 : -1;
-          setIntensity({
-            prev: intensity.current,
-            current: Math.min(pushDirection * 0.075 * avg + avg, 1),
-          });
-
-          animationFrameRef.current = requestAnimationFrame(process);
+        const rmsRange = (arr: Uint8Array, s: number, e: number) => {
+          let sum = 0;
+          for (let j = s; j < e; j++) sum += arr[j];
+          return sum / (e - s);
         };
 
-        animationFrameRef.current = requestAnimationFrame(process);
+        const avgLow = rmsRange(dataArray, 0, lowCount);
+        const avgMid = rmsRange(dataArray, lowCount, lowCount + midCount);
+        const avgHigh = rmsRange(dataArray, lowCount + midCount, dataArray.length);
+
+        const eff = Math.max(avgLow, avgMid, avgHigh) / 255;
+
+        history.push(eff);
+        if (history.length > 60) history.shift();
+
+        let avg = eff;
+        if (history.length === 60) {
+          const min = Math.min(...history);
+          const max = Math.max(...history);
+          avg = max === min ? 0 : Math.min(Math.max((eff - min) / (max - min), 0), 1);
+        }
+
+        const pushDirection = avg > prevIntensity ? 1 : -1;
+        const current = Math.min(pushDirection * 0.075 * avg + avg, 1);
+
+        intensityFrames.push({ prev: prevIntensity, current });
+        prevIntensity = current;
+
+        ampsFrames.push(
+          calculateAmpsForPerformanceMode(Array.from(dataArray), PerformanceMode.High)
+        );
+      }
+
+      intensityFramesRef.current = intensityFrames;
+      ampsFramesRef.current = ampsFrames;
+      visualAmpsRef.current = ampsFrames;
+      frameMetaRef.current = { sampleRate, hopSize, frameCount };
+
+      const audio = new Audio(URL.createObjectURL(file));
+      audioRef.current = audio;
+
+      const src = audioCtx.createMediaElementSource(audio);
+      src.connect(audioCtx.destination);
+
+      await audio.play();
+      setIsPlaying(true);
+
+      // const FPS = 30;
+      // const frameDuration = 1000 / FPS;
+      // let accumulatedTime = 0;
+      // let lastTimestamp = performance.now();
+      // let pendingTimeoutId: NodeJS.Timeout | null = null;
+
+      const tick = () => {
+        if (!audioRef.current || !frameMetaRef.current) return;
+
+        if (audioRef.current.paused) {
+          setIntensity({
+            prev: 0,
+            current: 0
+          })
+
+          setAmps(Array.from({ length: 256 }).map(() => 0));
+          animationFrameRef.current = requestAnimationFrame(tick);
+          return;
+        }
+
+        // const currentTimestamp = performance.now();
+        // accumulatedTime += currentTimestamp - lastTimestamp;
+        // lastTimestamp = currentTimestamp;
+        const { sampleRate, hopSize, frameCount } = frameMetaRef.current!;
+
+        const currentFrame = Math.min(
+          Math.floor((audioRef.current.currentTime * sampleRate) / hopSize),
+          frameCount - 1
+        );
+
+        const nextFrame = Math.min(currentFrame + 1, frameCount - 1);
+        const fractionalFrame: number = ((audioRef.current.currentTime * sampleRate) / hopSize) - currentFrame;
+
+        setIntensity(intensityFramesRef.current![currentFrame]);
+
+        // if (accumulatedTime >= frameDuration) {
+        // if (pendingTimeoutId) {
+        //   clearTimeout(pendingTimeoutId);
+        // }
+
+        // accumulatedTime -= frameDuration;
+        setIntensity(intensityFramesRef.current![currentFrame]);
+
+        for (let i = 0; i < visualAmpsRef.current![currentFrame].length; i++) {
+          const diff: number = smoothStep(fractionalFrame) * (ampsFramesRef.current![nextFrame][i] - ampsFramesRef.current![currentFrame][i]);
+          // console.log(diff);
+          visualAmpsRef.current![currentFrame][i] = (ampsFramesRef.current![currentFrame][i] || 0) + diff;
+        }
+
+        setAmps(visualAmpsRef.current![currentFrame]);
+        setCurrentFrame(currentFrame);
+        animationFrameRef.current = requestAnimationFrame(tick);
+        // } else {
+        //   if (pendingTimeoutId) {
+        //     clearTimeout(pendingTimeoutId);
+        //   }
+
+        //   pendingTimeoutId = setTimeout(() => {
+        //     animationFrameRef.current = requestAnimationFrame(tick);
+        //   }, frameDuration - accumulatedTime);
+        // }
+
       };
 
-      reader.readAsArrayBuffer(file);
+      animationFrameRef.current = requestAnimationFrame(tick);
+    };
 
-      return () => {
-        if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
-        reader.abort();
-        audioRef.current?.pause();
-        audioCtxRef.current?.close();
-        setAmps([]);
-        setIntensity({ prev: 0, current: 0 });
-        setCurrentTime(0);
-      };
-    } else {
-      navigate('/');
-    }
+    reader.readAsArrayBuffer(file);
+
+    return () => {
+      cancelled = true;
+      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+      reader.abort();
+      audioRef.current?.pause();
+      audioCtxRef.current?.close();
+    };
   }, [file]);
+
+  // useEffect(() => {
+  //   console.log(amps)
+  // }, [amps])
 
   const navItems = [
     {

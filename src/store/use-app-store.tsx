@@ -6,6 +6,7 @@ export const useAppStore = create<AppState>((set) => ({
     isPlaying: false,
     amps: [],
     currentTime: 0,
+    currentFrame: 0,
     intensity: { prev: 0, current: 0 },
     file: null,
 
@@ -13,6 +14,7 @@ export const useAppStore = create<AppState>((set) => ({
     setIsPlaying: (isPlaying) => set({ isPlaying }),
     setAmps: (amps) => set({ amps }),
     setCurrentTime: (currentTime) => set({ currentTime }),
+    setCurrentFrame: (currentFrame) => set({ currentFrame }),
     setIntensity: (intensity) => set({ intensity }),
     setFile: (file: File | null) => set({ file }),
 }));
