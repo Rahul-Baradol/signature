@@ -6,18 +6,18 @@ import { SocialSidebar } from '@/components/social-sidebar';
 import { calculateAmpsForPerformanceMode, PerformanceMode } from '@/utils/performance-mode-util';
 import { motion } from 'framer-motion';
 import * as Icons from 'lucide-react';
-import { smoothStep } from '@/utils/math';
 
 export const AnimationLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { amps, file, isPlaying, currentTime, setCurrentFrame, intensity, setIsPlaying, setAmps, setCurrentTime, setIntensity } = useAppStore();
+  const { file, isPlaying, currentTime, setCurrentFrame, setIsPlaying, setAmps, setCurrentTime, setIntensity } = useAppStore();
 
   const frameMetaRef = useRef<{ sampleRate: number; hopSize: number; frameCount: number } | null>(null);
   const intensityFramesRef = useRef<{ prev: number; current: number }[] | null>(null);
   const ampsFramesRef = useRef<number[][] | null>(null);
   const visualAmpsRef = useRef<number[][] | null>(null);
+  const prevSmoothAmpsRef = useRef<number[]>([]);
 
   const togglePlay = () => {
     if (!audioRef.current) {
@@ -155,68 +155,58 @@ export const AnimationLayout = () => {
       await audio.play();
       setIsPlaying(true);
 
-      // const FPS = 30;
-      // const frameDuration = 1000 / FPS;
-      // let accumulatedTime = 0;
-      // let lastTimestamp = performance.now();
-      // let pendingTimeoutId: NodeJS.Timeout | null = null;
-
       const tick = () => {
-        if (!audioRef.current || !frameMetaRef.current) return;
+        if (!audioRef.current || !frameMetaRef.current || !ampsFramesRef.current) return;
 
         if (audioRef.current.paused) {
           setIntensity({
             prev: 0,
             current: 0
-          })
+          });
 
-          setAmps(Array.from({ length: 256 }).map(() => 0));
+          setAmps(new Array(ampsFramesRef.current[0].length).fill(0));
           animationFrameRef.current = requestAnimationFrame(tick);
           return;
         }
 
-        // const currentTimestamp = performance.now();
-        // accumulatedTime += currentTimestamp - lastTimestamp;
-        // lastTimestamp = currentTimestamp;
-        const { sampleRate, hopSize, frameCount } = frameMetaRef.current!;
+        const { sampleRate, hopSize, frameCount } = frameMetaRef.current;
+        const currentTime = audioRef.current.currentTime;
+        setCurrentTime(currentTime);
 
-        const currentFrame = Math.min(
-          Math.floor((audioRef.current.currentTime * sampleRate) / hopSize),
-          frameCount - 1
-        );
+        const exactFrame = (currentTime * sampleRate) / hopSize;
+        const currentIdx = Math.floor(exactFrame);
+        const nextIdx = Math.min(currentIdx + 1, frameCount - 1);
 
-        const nextFrame = Math.min(currentFrame + 1, frameCount - 1);
-        const fractionalFrame: number = ((audioRef.current.currentTime * sampleRate) / hopSize) - currentFrame;
+        const t = exactFrame - currentIdx;
 
-        setIntensity(intensityFramesRef.current![currentFrame]);
+        if (currentIdx >= frameCount) return;
 
-        // if (accumulatedTime >= frameDuration) {
-        // if (pendingTimeoutId) {
-        //   clearTimeout(pendingTimeoutId);
-        // }
+        const intensityA = intensityFramesRef.current![currentIdx];
+        const intensityB = intensityFramesRef.current![nextIdx];
 
-        // accumulatedTime -= frameDuration;
-        setIntensity(intensityFramesRef.current![currentFrame]);
+        setIntensity({
+          prev: intensityA.current,
+          current: intensityA.current + (intensityB.current - intensityA.current) * t
+        });
 
-        for (let i = 0; i < visualAmpsRef.current![currentFrame].length; i++) {
-          const diff: number = smoothStep(fractionalFrame) * (ampsFramesRef.current![nextFrame][i] - ampsFramesRef.current![currentFrame][i]);
-          // console.log(diff);
-          visualAmpsRef.current![currentFrame][i] = (ampsFramesRef.current![currentFrame][i] || 0) + diff;
-        }
+        const ampsA = ampsFramesRef.current![currentIdx];
+        const ampsB = ampsFramesRef.current![nextIdx];
 
-        setAmps(visualAmpsRef.current![currentFrame]);
-        setCurrentFrame(currentFrame);
+        const interpolatedAmps = ampsA.map((valA, i) => {
+          const valB = ampsB[i];
+          const targetVal = valA + (valB - valA) * t;
+
+          const prevVal = prevSmoothAmpsRef.current[i] || 0;
+
+          const sense = targetVal > prevVal ? 0.8 : 0.15;
+          return prevVal + (targetVal - prevVal) * sense;
+        });
+
+        prevSmoothAmpsRef.current = interpolatedAmps;
+        setAmps(interpolatedAmps);
+
+        setCurrentFrame(currentIdx);
         animationFrameRef.current = requestAnimationFrame(tick);
-        // } else {
-        //   if (pendingTimeoutId) {
-        //     clearTimeout(pendingTimeoutId);
-        //   }
-
-        //   pendingTimeoutId = setTimeout(() => {
-        //     animationFrameRef.current = requestAnimationFrame(tick);
-        //   }, frameDuration - accumulatedTime);
-        // }
-
       };
 
       animationFrameRef.current = requestAnimationFrame(tick);
@@ -232,10 +222,6 @@ export const AnimationLayout = () => {
       audioCtxRef.current?.close();
     };
   }, [file]);
-
-  // useEffect(() => {
-  //   console.log(amps)
-  // }, [amps])
 
   const navItems = [
     {
