@@ -1,5 +1,6 @@
 import { FiPlay } from "react-icons/fi";
 import { CiPause1 } from "react-icons/ci";
+import { useAppStore } from "@/store/use-app-store";
 
 interface Props {
   audioRef: React.MutableRefObject<HTMLAudioElement | null>;
@@ -10,6 +11,7 @@ interface Props {
 
 export const AudioControls = ({ audioRef, isPlaying, currentTime, onToggle }: Props) => {
   const duration = audioRef.current?.duration || 0;
+  const { setCurrentTime } = useAppStore();
 
   const formatTime = (time: number) => {
     const mins = Math.floor(time / 60);
@@ -26,7 +28,10 @@ export const AudioControls = ({ audioRef, isPlaying, currentTime, onToggle }: Pr
         step={0.1}
         value={currentTime}
         onChange={(e) => {
-          if (audioRef.current) audioRef.current.currentTime = parseFloat(e.target.value);
+          if (audioRef.current) {
+            audioRef.current.currentTime = parseFloat(e.target.value);
+            setCurrentTime(parseFloat(e.target.value));
+          }
         }}
         className="w-full accent-violet-500"
       />
