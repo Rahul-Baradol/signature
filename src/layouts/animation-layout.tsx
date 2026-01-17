@@ -1,15 +1,13 @@
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/use-app-store';
 import { useEffect, useRef, useState } from 'react';
 import { AudioControls } from '@/components/audio-controls';
 import { SocialSidebar } from '@/components/social-sidebar';
 import { calculateAmpsForPerformanceMode, PerformanceMode } from '@/utils/performance-mode-util';
 import { motion, AnimatePresence } from 'framer-motion';
-import * as Icons from 'lucide-react';
 
 export const AnimationLayout = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [loadingProgress, setLoadingProgress] = useState(0);
 
   const {
@@ -200,10 +198,10 @@ export const AnimationLayout = () => {
     };
   }, [file]);
 
-  const navItems = [
-    { path: '/signature/gradient', label: 'Gradient', icon: Icons.Circle },
-    { path: '/signature/concentric-rings', label: 'Rings', icon: Icons.Rotate3D },
-  ];
+  // const navItems = [
+  //   { path: '/signature/gradient', label: 'Gradient', icon: Icons.Circle },
+  //   { path: '/signature/concentric-rings', label: 'Rings', icon: Icons.Rotate3D },
+  // ];
 
   return (
     <div className="relative h-screen w-full bg-black overflow-hidden text-white">
