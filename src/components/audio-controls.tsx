@@ -1,17 +1,20 @@
 import { FiPlay } from "react-icons/fi";
 import { CiPause1 } from "react-icons/ci";
 import { useAppStore } from "@/store/use-app-store";
+import { useEffect, useRef, useState } from "react";
 
 interface Props {
+  isFullscreen: boolean;
   audioRef: React.MutableRefObject<HTMLAudioElement | null>;
-  isPlaying: boolean;
-  currentTime: number;
   onToggle: () => void;
 }
 
-export const AudioControls = ({ audioRef, isPlaying, currentTime, onToggle }: Props) => {
+export const AudioControls = ({ audioRef, onToggle, isFullscreen }: Props) => {
   const duration = audioRef.current?.duration || 0;
-  const { setCurrentTime } = useAppStore();
+  const { isPlaying, currentTime, setCurrentTime } = useAppStore();
+
+  const [showControls, setShowControls] = useState(false);
+  const ref = useRef<HTMLDivElement | null>(null);
 
   const formatTime = (time: number) => {
     const mins = Math.floor(time / 60);
@@ -19,8 +22,34 @@ export const AudioControls = ({ audioRef, isPlaying, currentTime, onToggle }: Pr
     return `${mins}:${secs}`;
   };
 
+  useEffect(() => {
+    let lastMoveTime = Date.now();
+    const IDLETIME = 1000;
+
+    const mouseMoved = async () => {
+      setShowControls(true);
+      lastMoveTime = Date.now();
+    }
+
+    document.addEventListener("mousemove", mouseMoved);
+      
+    const intervalId = setInterval(() => {
+      if ((Date.now() - lastMoveTime) >= IDLETIME) {
+        setShowControls(false);
+      }
+    }, 100)
+
+    return () => {
+      document.removeEventListener("mousemove", mouseMoved);
+      clearInterval(intervalId);
+    };
+  }, [])
+
   return (
-    <div className="bottom-5 w-11/12 max-w-3xl flex flex-row items-center justify-center gap-4 opacity-40 hover:opacity-100 transition-opacity bg-black/20 p-4 rounded-xl backdrop-blur-sm">
+    <div
+      ref={ref}
+      className={`bottom-5 w-11/12 max-w-3xl flex flex-row items-center justify-center gap-4 ${isFullscreen? 'opacity-0' : 'opacity-40'} ${showControls ? 'opacity-100' : ''} hover:opacity-100 transition-opacity duration-750 bg-black/20 p-4 rounded-xl backdrop-blur-sm`}
+    >
       <input
         type="range"
         min={0}

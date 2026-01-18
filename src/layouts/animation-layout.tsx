@@ -311,14 +311,13 @@ export const AnimationLayout = () => {
 
               <div className="absolute bottom-10 left-0 right-0 z-20 flex justify-center">
                 <AudioControls
+                  isFullscreen={isFullscreen}
                   audioRef={audioRef}
-                  isPlaying={isPlaying}
-                  currentTime={currentTime}
                   onToggle={togglePlay}
                 />
               </div>
 
-              <SocialSidebar />
+              {!isFullscreen ? <SocialSidebar /> : <></>}
             </main>
           </motion.div>
         )}
