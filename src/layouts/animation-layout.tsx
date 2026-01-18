@@ -12,7 +12,7 @@ export const AnimationLayout = () => {
   const [loadingProgress, setLoadingProgress] = useState(0);
 
   const {
-    file, isPlaying, isDataReady, currentTime,
+    file, isDataReady, 
     setCurrentFrame, setIsPlaying, setIsDataReady,
     setAmps, setCurrentTime, setIntensity
   } = useAppStore();
