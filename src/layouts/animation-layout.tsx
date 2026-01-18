@@ -5,6 +5,7 @@ import { AudioControls } from '@/components/audio-controls';
 import { SocialSidebar } from '@/components/social-sidebar';
 import { calculateAmpsForPerformanceMode, PerformanceMode } from '@/utils/performance-mode-util';
 import { motion, AnimatePresence } from 'framer-motion';
+import { MaximizeIcon, MinimizeIcon } from 'lucide-react';
 
 export const AnimationLayout = () => {
   const navigate = useNavigate();
@@ -198,13 +199,64 @@ export const AnimationLayout = () => {
     };
   }, [file]);
 
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      containerRef.current?.requestFullscreen().catch((err) => {
+        console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+      });
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen();
+      setIsFullscreen(false);
+    }
+  };
+
+  useEffect(() => {
+    const handleFsChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', handleFsChange);
+    return () => document.removeEventListener('fullscreenchange', handleFsChange);
+  }, []);
+
   // const navItems = [
   //   { path: '/signature/gradient', label: 'Gradient', icon: Icons.Circle },
   //   { path: '/signature/concentric-rings', label: 'Rings', icon: Icons.Rotate3D },
   // ];
 
   return (
-    <div className="relative h-screen w-full bg-black overflow-hidden text-white">
+    <div
+      ref={containerRef}
+      className="relative h-screen w-full bg-black overflow-hidden text-white"
+    >
+      {isDataReady && (
+        <motion.button
+          layout
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          whileHover={{ scale: 1.1, backgroundColor: "rgba(255, 255, 255, 0.15)" }}
+          whileTap={{ scale: 0.9 }}
+          onClick={toggleFullscreen}
+          className="absolute top-6 left-6 z-50 p-2 rounded-full bg-black/20 backdrop-blur-md border border-white/10 transition-all shadow-lg"
+          title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+        >
+            <motion.div
+              key={isFullscreen ? "minimize" : "maximize"}
+              initial={{ rotate: -90, opacity: 0, scale: 0.5 }}
+              animate={{ rotate: 0, opacity: 1, scale: 1 }}
+              exit={{ rotate: 90, opacity: 0, scale: 0.5 }}
+              transition={{ duration: 0.2, type: "spring", stiffness: 300, damping: 20 }}
+            >
+              {isFullscreen ? (
+                <MinimizeIcon className="w-5 h-5" />
+              ) : (
+                <MaximizeIcon className="w-5 h-5" />
+              )}
+            </motion.div>
+        </motion.button>
+      )}
+
       <AnimatePresence mode="wait">
         {!isDataReady ? (
           <motion.div
