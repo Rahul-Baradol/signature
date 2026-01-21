@@ -42,6 +42,9 @@ export default function BeatVisualizer() {
 
   const [amps, setAmps] = useState<number[]>([]);
 
+  const [lastTime, setLastTime] = useState(0);
+  const [maxDiff, setMaxDiff] = useState(0);
+
   useEffect(() => {
     if (file) {
       let animationId: number;
@@ -181,6 +184,16 @@ export default function BeatVisualizer() {
   }, [file]);
 
   useEffect(() => {
+    if (file && musicRef.current && beatIntensity.current) {
+      const now = performance.now();
+      if (lastTime) {
+        const deltaTime = now - lastTime;
+        setMaxDiff((prev) => Math.max(prev, deltaTime));
+      }
+      setLastTime(now);
+    }
+
+
     if (musicRef.current && beatIntensity.current) {
       const multipler = 10;
       const alpha = Math.log(1 + (multipler * beatIntensity.current)) / Math.log(1 + multipler);
@@ -222,6 +235,10 @@ export default function BeatVisualizer() {
     };
 
   }, [file, amps, beatIntensity])
+
+  useEffect(() => {
+    console.log("Max Diff: ", maxDiff);
+  }, [maxDiff])
 
   return (
     <div
