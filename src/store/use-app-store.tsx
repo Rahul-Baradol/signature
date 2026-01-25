@@ -1,24 +1,39 @@
 import { create } from "zustand";
-import type { AppState } from "./schema";
+import type { AppState, MicrophonePermissionStatus, StudioMode, TimeSignature } from "./schema";
 
 export const useAppStore = create<AppState>((set) => ({
+    // general
     amps: [],
-    hasInitializedAudio: false,
-    hasMicrophonePermission: false,
+    intensity: { prev: 0, current: 0 },
+    setIntensity: (intensity) => set({ intensity }),
+    setAmps: (amps) => set({ amps }),
+    
+    // visualizer
+    file: null,
     isPlaying: false,
     isDataReady: false,
     currentTime: 0,
     currentFrame: 0,
-    intensity: { prev: 0, current: 0 },
-    file: null,
-
-    setHasMicrophonePermission: (hasPermission: boolean) => set({ hasMicrophonePermission: hasPermission }),
-    setHasInitializedAudio: (hasInitializedAudio: boolean) => set({ hasInitializedAudio }),
+    hasInitializedAudio: false,
+    setFile: (file: File | null) => set({ file }),
     setIsPlaying: (isPlaying) => set({ isPlaying }),
     setIsDataReady: (isDataReady) => set({ isDataReady }),
-    setAmps: (amps) => set({ amps }),
     setCurrentTime: (currentTime) => set({ currentTime }),
     setCurrentFrame: (currentFrame) => set({ currentFrame }),
-    setIntensity: (intensity) => set({ intensity }),
-    setFile: (file: File | null) => set({ file }),
+    setHasInitializedAudio: (hasInitializedAudio: boolean) => set({ hasInitializedAudio }),
+
+    // studio
+    studioMode: "openmic",
+    microphonePermission: "prompt",
+    setStudioMode: (studioMode: StudioMode) => set({ studioMode }),
+    setMicrophonePermission: (microphonePermission: MicrophonePermissionStatus) => set({ microphonePermission: microphonePermission }),
+
+    // metronome states
+    bpm: 120,
+    timeSignature: "4/4",
+    isMetronomeActive: false,
+
+    setBpm: (bpm: number) => set({ bpm }),
+    setTimeSignature: (timeSignature: TimeSignature) => set({ timeSignature }),
+    setIsMetronomeActive: (isMetronomeActive: boolean) => set({ isMetronomeActive }),
 }));

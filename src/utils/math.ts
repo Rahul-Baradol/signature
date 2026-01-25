@@ -13,3 +13,17 @@ export function normalize(value: number, min: number, max: number) {
 export function step(value: number, direction: number) {
     return Math.min(direction * 0.075 * value + value, 1);
 }
+
+export const easeInOut = (t: number) =>
+  t < 0.5
+    ? 2 * t * t
+    : 1 - Math.pow(-2 * t + 2, 2) / 2;
+
+export const gaussian = (x: number, sigma: number) =>
+  Math.exp(-(x * x) / (2 * sigma * sigma));
+
+export const beatEnvelope = (t: number) => {
+  if (t < 0.05) return t / 0.05;          // attack (snap)
+  if (t < 0.25) return 1 - (t - 0.05) / 0.2; // decay
+  return 0;                              // silence
+};

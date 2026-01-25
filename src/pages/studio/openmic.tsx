@@ -3,9 +3,14 @@ import { SlMusicToneAlt } from "react-icons/sl";
 import { getMusicTransform, getBackgroundGradient } from "@/utils/visualizer-util";
 
 import { useAppStore } from "@/store/use-app-store";
+import { useEffect } from "react";
 
-export default function Studio() {
-  const { amps, intensity } = useAppStore();
+export default function OpenmicStudio() {
+  const { amps, intensity, setStudioMode } = useAppStore();
+
+  useEffect(() => {
+    setStudioMode("openmic")
+  }, [])  
 
   const containerStyle = {
     background: getBackgroundGradient(amps),
@@ -20,7 +25,6 @@ export default function Studio() {
       style={containerStyle}
       className="w-screen h-screen flex flex-col gap-5 items-center justify-center transition-all relative overflow-hidden duration-[33]"
     >
-
       <div className="flex flex-col items-center justify-around bg-transparent">
         <div
           style={musicIconStyle}

@@ -4,7 +4,8 @@ import GradientDesign from '@/pages/gradient';
 import ConcetricRingsDesign from '@/pages/concentric-rings';
 import { AnimationLayout } from '@/layouts/animation-layout';
 import { StudioLayout } from './layouts/studio-layout';
-import Studio from './pages/studio';
+import OpenmicStudio from './pages/studio/openmic';
+import Metronome from './pages/studio/metronome';
 
 function App() {
     return (
@@ -18,7 +19,8 @@ function App() {
                 </Route>
 
                 <Route path="/studio" element={<StudioLayout />}>
-                    <Route index element={<Studio />} />
+                    <Route index element={<OpenmicStudio />} />
+                    <Route path="metronome" element={<Metronome />} />
                 </Route>
             </Routes>
         </Router>
