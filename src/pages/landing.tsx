@@ -93,6 +93,19 @@ const Landing: React.FC = () => {
                   </motion.div>
                 </label>
               </div>
+
+              <div className="group relative">
+                <motion.div
+                  whileHover={{ scale: 1.05, backgroundColor: '#38bdf8' }}
+                  whileTap={{ scale: 0.95 }}
+                  className="relative z-10 px-10 py-5 bg-white text-black font-bold text-[11px] tracking-widest uppercase rounded-full transition-all duration-300 group-hover:shadow-[0_0_30px_rgba(56,189,248,0.4)] cursor-pointer"
+                  onClick={() => {
+                    navigate("/studio")
+                  }}
+                >
+                  Go to studio
+                </motion.div>
+              </div>
             </div>
 
             <div className="flex flex-col gap-5">
@@ -161,7 +174,7 @@ const Landing: React.FC = () => {
           </div>
         </div>
 
-  
+
       </motion.div>
 
     </div>

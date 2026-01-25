@@ -4,6 +4,7 @@ export type Intensity = {
 };
 
 export type AppState = {
+    hasMicrophonePermission: boolean;
     hasInitializedAudio: boolean;
     isPlaying: boolean;
     isDataReady: boolean;
@@ -13,6 +14,7 @@ export type AppState = {
     intensity: Intensity;
     file: File | null;
 
+    setHasMicrophonePermission: (hasPermission: boolean) => void;
     setHasInitializedAudio: (hasInitializedAudio: boolean) => void;
     setIsPlaying: (isPlaying: boolean) => void;
     setIsDataReady: (isDataReady: boolean) => void;

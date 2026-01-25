@@ -6,6 +6,8 @@ import { SocialSidebar } from '@/components/social-sidebar';
 import { calculateAmpsForPerformanceMode, PerformanceMode } from '@/utils/performance-mode-util';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MaximizeIcon, MinimizeIcon } from 'lucide-react';
+import { calculateIntensityFrame } from '@/utils/visualizer-util';
+import { normalize, step } from '@/utils/math';
 
 export const AnimationLayout = () => {
   const navigate = useNavigate();
@@ -93,39 +95,32 @@ export const AnimationLayout = () => {
 
         const dataArray = new Uint8Array(analyser.frequencyBinCount);
         analyser.getByteFrequencyData(dataArray);
+        
+        const effectiveIntensityScore = calculateIntensityFrame(dataArray);
 
-        const lowCount = Math.floor(dataArray.length * 0.5);
-        const midCount = Math.floor(dataArray.length * 0.3);
-        const rmsRange = (arr: Uint8Array, s: number, e: number) => {
-          let sum = 0;
-          for (let j = s; j < e; j++) sum += arr[j];
-          return sum / (e - s);
-        };
+        history.push(effectiveIntensityScore);
+        if (history.length > 60) {
+          history.shift();
+        }
 
-        const avgLow = rmsRange(dataArray, 0, lowCount);
-        const avgMid = rmsRange(dataArray, lowCount, lowCount + midCount);
-        const avgHigh = rmsRange(dataArray, lowCount + midCount, dataArray.length);
-        const eff = Math.max(avgLow, avgMid, avgHigh) / 255;
-
-        history.push(eff);
-        if (history.length > 60) history.shift();
-
-        let avg = eff;
+        let avg = effectiveIntensityScore;
         if (history.length === 60) {
           const min = Math.min(...history);
           const max = Math.max(...history);
-          avg = max === min ? 0 : Math.min(Math.max((eff - min) / (max - min), 0), 1);
+          avg = normalize(avg, min, max);
         }
 
         const pushDirection = avg > prevIntensity ? 1 : -1;
-        const current = Math.min(pushDirection * 0.075 * avg + avg, 1);
+        const current = step(avg, pushDirection);
 
         intensityFrames.push({ prev: prevIntensity, current });
         prevIntensity = current;
         ampsFrames.push(calculateAmpsForPerformanceMode(Array.from(dataArray), PerformanceMode.High));
       }
 
-      if (cancelled) return;
+      if (cancelled) {
+        return;
+      }
 
       intensityFramesRef.current = intensityFrames;
       ampsFramesRef.current = ampsFrames;
@@ -142,7 +137,9 @@ export const AnimationLayout = () => {
       setIsPlaying(true);
 
       const tick = () => {
-        if (!audioRef.current || !frameMetaRef.current || !ampsFramesRef.current) return;
+        if (!audioRef.current || !frameMetaRef.current || !ampsFramesRef.current) {
+          return;
+        }
 
         if (audioRef.current.paused) {
           setIntensity({ prev: 0, current: 0 });
@@ -160,7 +157,9 @@ export const AnimationLayout = () => {
         const nextIdx = Math.min(currentIdx + 1, frameCount - 1);
         const t = exactFrame - currentIdx;
 
-        if (currentIdx >= frameCount) return;
+        if (currentIdx >= frameCount) {
+          return;
+        }
 
         const iA = intensityFramesRef.current![currentIdx];
         const iB = intensityFramesRef.current![nextIdx];

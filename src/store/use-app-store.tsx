@@ -2,15 +2,17 @@ import { create } from "zustand";
 import type { AppState } from "./schema";
 
 export const useAppStore = create<AppState>((set) => ({
+    amps: [],
     hasInitializedAudio: false,
+    hasMicrophonePermission: false,
     isPlaying: false,
     isDataReady: false,
-    amps: [],
     currentTime: 0,
     currentFrame: 0,
     intensity: { prev: 0, current: 0 },
     file: null,
 
+    setHasMicrophonePermission: (hasPermission: boolean) => set({ hasMicrophonePermission: hasPermission }),
     setHasInitializedAudio: (hasInitializedAudio: boolean) => set({ hasInitializedAudio }),
     setIsPlaying: (isPlaying) => set({ isPlaying }),
     setIsDataReady: (isDataReady) => set({ isDataReady }),
