@@ -5,7 +5,7 @@ export type Intensity = {
 
 export type MicrophonePermissionStatus = "granted" | "denied" | "loading" | "prompt";
 
-export type StudioMode = "openmic" | "metronome";
+export type StudioMode = "openmic" | "metronome" | "looper";
 
 export const TIME_SIGNATURES = ["4/4", "3/4", "2/4", "6/8"] as const;
 
@@ -46,4 +46,8 @@ export type AppState = {
     setBpm: (bpm: number) => void;
     setTimeSignature: (timeSignature: TimeSignature) => void;
     setIsMetronomeActive: (isMetronomeActive: boolean) => void;
+
+    // looper states
+    isLooperActive: boolean;
+    setIsLooperActive: (isLooperActive: boolean) => void;
 };

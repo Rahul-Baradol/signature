@@ -18,7 +18,7 @@ export const StudioLayout = () => {
     const audioCtxRef = useRef<AudioContext | null>(null);
     const analyserRef = useRef<AnalyserNode | null>(null);
     const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
-    const rafRef = useRef<number | null>(null);
+    const animationFrameRef = useRef<number | null>(null);
 
     const toggleFullscreen = () => {
         if (!document.fullscreenElement) {
@@ -52,7 +52,7 @@ export const StudioLayout = () => {
             current: currentIntensity
         });
 
-        rafRef.current = requestAnimationFrame(tick);
+        animationFrameRef.current = requestAnimationFrame(tick);
     };
 
     const sweepGradients = () => {
@@ -88,15 +88,14 @@ export const StudioLayout = () => {
             setAmps(sweepyGradients);
 
             if (rawProgress < 1) {
-                rafRef.current = requestAnimationFrame(sweep);
+                animationFrameRef.current = requestAnimationFrame(sweep);
             } else {
                 setMicrophonePermission("granted");
                 tick();
             }
         };
 
-
-        rafRef.current = requestAnimationFrame(() => sweep(performance.now()));
+        animationFrameRef.current = requestAnimationFrame(() => sweep(performance.now()));
     };
 
     const requestMic = async () => {
@@ -131,21 +130,21 @@ export const StudioLayout = () => {
 
     useEffect(() => {
         if (studioMode === "metronome") {
-            if (rafRef.current) {
-                cancelAnimationFrame(rafRef.current);
-            }
-
             setAmps([]);
             setIntensity({
                 prev: 0,
                 current: 0
             })
-        }
-
-        if (studioMode === "openmic" && microphonePermission === "granted") {
+        } else if ((studioMode === "openmic" || studioMode === "looper") && microphonePermission === "granted") {
             tick();
         }
-    }, [studioMode])
+
+        return () => {
+            if (animationFrameRef.current) {
+                cancelAnimationFrame(animationFrameRef.current);
+            }
+        };
+    }, [studioMode]);
 
     useEffect(() => {
         if (microphonePermission != "granted") {
@@ -185,7 +184,9 @@ export const StudioLayout = () => {
         return () => {
             isMounted = false;
 
-            if (rafRef.current) cancelAnimationFrame(rafRef.current);
+            if (animationFrameRef.current) {
+                cancelAnimationFrame(animationFrameRef.current);
+            }
             analyserRef.current?.disconnect();
             sourceRef.current?.disconnect();
             audioCtxRef.current?.close();
@@ -194,7 +195,7 @@ export const StudioLayout = () => {
             sourceRef.current = null;
             audioCtxRef.current = null;
         };
-    }, [microphonePermission, setAmps]);
+    }, [microphonePermission]);
 
     return (
         <div
@@ -220,6 +221,7 @@ export const StudioLayout = () => {
                     whileTap={{ scale: 0.95 }}
                     transition={{ type: "spring", stiffness: 400, damping: 17 }}
                     onClick={requestMic}
+                    disabled={microphonePermission === "loading"}
                     className={`group absolute w-[240px] h-[50px] bottom-20 left-1/2 z-50
                  flex items-center justify-center gap-2 
                  rounded-full bg-black text-white text-sm font-semibold shadow-xl border border-white cursor-pointer
