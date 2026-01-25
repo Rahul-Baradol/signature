@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, memo } from "react";
 
 class Particle {
     canvas: HTMLCanvasElement;
@@ -56,7 +56,7 @@ class Particle {
     }
 }
 
-export const Particles = ({ beatIntensity }: { beatIntensity: any }) => {
+export const Particles = ({ beatIntensity, particleCount = 200 }: { beatIntensity: any, particleCount?: number }) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const particles = useRef<Particle[]>([]);
 
@@ -67,7 +67,7 @@ export const Particles = ({ beatIntensity }: { beatIntensity: any }) => {
         canvas.height = canvas.offsetHeight;
 
         function spawnParticle() {
-            if (particles.current.length < 200) {
+            if (particles.current.length < particleCount) {
                 particles.current.push(new Particle(canvas, context));
             }
         }
@@ -142,3 +142,5 @@ export const Particles = ({ beatIntensity }: { beatIntensity: any }) => {
         />
     );
 };
+
+export const ParticlesWrappedInMemo = memo(Particles);

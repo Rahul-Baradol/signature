@@ -1,22 +1,19 @@
 import { SlMusicToneAlt } from "react-icons/sl";
 
-import { getMusicTransform, getBackgroundGradient } from "@/utils/visualizer-util";
-
+import { getBackgroundGradient } from "@/utils/visualizer-util";
 import { useAppStore } from "@/store/use-app-store";
 import { useEffect, useRef, useState } from "react";
 import { MetronomeControls } from "@/components/metronome-controls";
-import { easeInOut, gaussian } from "@/utils/math";
 import { playKick } from "@/utils/sound-util";
+import { Particles } from "@/components/particles";
 
 export default function Metronome() {
-  const { amps, intensity, bpm, timeSignature, isMetronomeActive, setStudioMode, setAmps } = useAppStore();
+  const { amps, intensity, bpm, timeSignature, isMetronomeActive, setStudioMode, setAmps, setIntensity } = useAppStore();
 
   const [count, setCount] = useState(0);
   const [metronomeIntervalId, setMetronomeIntervalId] = useState<NodeJS.Timeout | null>(null);
 
   const audioContextRef = useRef<AudioContext | null>(null);
-
-  const animationFrameRef = useRef<number | null>(null);
 
   function getNewCount(currentCount: number): number {
     let newCount = currentCount + 1;
@@ -32,42 +29,21 @@ export default function Metronome() {
     }
   }
 
-  const sweepGradients = (duration: number) => {
-    const max = 255;
-    const bins = 64;
-
-    let startTime: number | null = null;
-
-    const sweep = (timestamp: number) => {
-      if (!startTime) startTime = timestamp;
-
-      const elapsed = timestamp - startTime;
-      const rawProgress = Math.min(elapsed / duration, 1);
-      const progress = easeInOut(rawProgress);
-
-      const center = progress * (bins - 1);
-      const maxValue = max * progress;
-
-      const sweepyGradients = new Array(bins).fill(0);
-
-      for (let i = 0; i < bins; i++) {
-        const dist = i - center;
-
-        const energy = gaussian(dist, 3);
-        const shimmer = 0.85 + Math.random() * 0.15;
-
-        sweepyGradients[i] = Math.floor(
-          energy * maxValue * shimmer
-        );
-      }
-
-      setAmps(sweepyGradients);
-
-      animationFrameRef.current = requestAnimationFrame(() => sweep(performance.now()));
-    };
-
-
-    animationFrameRef.current = requestAnimationFrame(() => sweep(performance.now()));
+  const elevateParticles = (count: number) => {
+    console.log(count)
+    if (intensity.current <= intensity.prev) {
+      const currentIntensity = (0.5 * intensity.prev) + (Math.random() * 0.1) + 0.4;
+      setIntensity({
+        current: currentIntensity,
+        prev: intensity.current,
+      });
+    } else {
+      const currentIntensity = Math.max((0.5 * intensity.prev) - (Math.random() * 0.50), 0);
+      setIntensity({
+        current: currentIntensity,
+        prev: intensity.current,
+      });
+    }
   };
 
   useEffect(() => {
@@ -89,6 +65,10 @@ export default function Metronome() {
     switch (isMetronomeActive) {
       case false:
         setMetronomeIntervalId(null);
+        setIntensity({
+          prev: 0,
+          current: 0
+        })
         break;
 
       case true:
@@ -108,26 +88,20 @@ export default function Metronome() {
 
   useEffect(() => {
     if (isMetronomeActive) {
-      // if (animationFrameRef.current) {
-      //   cancelAnimationFrame(animationFrameRef.current);
-      // }
-
-      // sweepGradients(1000);
-
+      let bigHit;
       if (timeSignature === "6/8") {
-        playKick(audioContextRef.current!, count == 1 || count == 4);
+        bigHit = count == 1 || count == 4;
       } else {
-        playKick(audioContextRef.current!, count == 1);
+        bigHit = count == 1;
       }
+
+      playKick(audioContextRef.current!, bigHit);
+      elevateParticles(count);
     }
   }, [count])
 
   const containerStyle = {
     background: getBackgroundGradient(amps),
-  };
-
-  const musicIconStyle = {
-    transform: getMusicTransform(intensity.current),
   };
 
   return (
@@ -137,7 +111,6 @@ export default function Metronome() {
     >
       <div className="flex flex-col items-center justify-around bg-transparent">
         <div
-          style={musicIconStyle}
           className="text-[30px] transition-all duration-1500 ease-out font-bold text-white"
         >
           {
@@ -147,6 +120,10 @@ export default function Metronome() {
       </div>
 
       <MetronomeControls />
+      <Particles
+        beatIntensity={intensity}
+        particleCount={1}
+      />
     </div>
   );
 }
