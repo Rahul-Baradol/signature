@@ -1,8 +1,8 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import { SocialSidebar } from '@/components/social-sidebar';
 import { motion } from 'framer-motion';
-import { MaximizeIcon, Mic, MinimizeIcon } from 'lucide-react';
+import { House, MaximizeIcon, Mic, MinimizeIcon } from 'lucide-react';
 import { useAppStore } from '@/store/use-app-store';
 import { calculateAmpsForPerformanceMode, PerformanceMode } from '@/utils/performance-mode-util';
 import { calculateIntensityFrame } from '@/utils/visualizer-util';
@@ -13,6 +13,7 @@ import type { Bar } from '@/store/schema';
 export const StudioLayout = () => {
     const { count, timeSignature, bpm, studioMode, intensity, setAmps, setIntensity, microphonePermission, setMicrophonePermission, isMetronomeActive, looperState, bars, addBar, setLooperState, setIsMetronomeActive, setTimeSignature } = useAppStore();
 
+    const navigate = useNavigate();
     const containerRef = useRef<HTMLDivElement>(null);
     const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -77,7 +78,7 @@ export const StudioLayout = () => {
         };
 
         addBar(newBar);
-        
+
         recordedChunks.current = [];
         setLooperState("idle");
     };
@@ -126,7 +127,7 @@ export const StudioLayout = () => {
                 const source = context.createBufferSource();
                 activeSourcesRef.current.push(source);
 
-                source.buffer = bar.recordedBuffer;                
+                source.buffer = bar.recordedBuffer;
                 source.connect(mixer);
                 source.start(startTime);
             });
@@ -427,13 +428,26 @@ export const StudioLayout = () => {
 
                     <div className='flex flex-col items-center gap-5 absolute top-6 left-6'>
                         <motion.button
-                            layout
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            whileHover={{ scale: 1.1, backgroundColor: "rgba(255, 255, 255, 0.15)" }}
+                            whileTap={{ scale: 0.9 }}
+                            className="z-50 p-2 rounded-full bg-black/20 backdrop-blur-md border border-white/10 transition-all shadow-lg cursor-pointer"
+                            title={"Home"}
+                            onClick={(() => {
+                                navigate("/")
+                            })}
+                        >
+                            <House className="w-4.5 h-4.5 text-white" />
+                        </motion.button>
+
+                        <motion.button
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
                             whileHover={{ scale: 1.1, backgroundColor: "rgba(255, 255, 255, 0.15)" }}
                             whileTap={{ scale: 0.9 }}
                             onClick={toggleFullscreen}
-                            className="z-50 p-2 rounded-full bg-black/20 backdrop-blur-md border border-white/10 transition-all shadow-lg"
+                            className="z-50 p-2 rounded-full bg-black/20 backdrop-blur-md border border-white/10 transition-all shadow-lg cursor-pointer"
                             title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
                         >
                             <motion.div

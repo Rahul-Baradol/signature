@@ -398,12 +398,12 @@ export function MetronomeControls() {
                             </div>
 
                             {
-                                studioMode === "looper" ? <div className="flex flex-col gap-4">
+                                studioMode === "looper" ? <div className="flex flex-col gap-4 h-full">
                                     <span className="text-white/40 text-xs uppercase">Loops</span>
                                     {
                                         bars.length === 0 ? (
                                             <motion.div
-                                                className="w-full h-full flex items-center justify-center text-center text-sm font-semibold italic"
+                                                className="w-full h-full flex text-sm font-semibold italic"
                                             >
                                                 No loops in the bucket
                                             </motion.div>
