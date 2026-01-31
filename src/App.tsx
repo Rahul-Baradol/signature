@@ -7,8 +7,54 @@ import { StudioLayout } from './layouts/studio-layout';
 import OpenmicStudio from './pages/studio/openmic';
 import Metronome from './pages/studio/metronome';
 import Looper from './pages/studio/looper';
+import { useEffect, useRef } from 'react';
+import { useAppStore } from './store/use-app-store';
+import { StudioActivationStatus } from './store/schema';
 
 function App() {
+    const { setActivateStudio } = useAppStore();
+
+    const animationFrameRef = useRef<number | null>(null);
+
+    useEffect(() => {
+        let start: number | null = null;
+        let sum: number = 0;
+        let count: number = 0;
+
+        function measureAnimationFrameIntervals() {
+            if (count == 120) {
+                const avgTime = sum / count;
+                console.log(avgTime)
+                if (avgTime <= 17) {
+                    setActivateStudio(StudioActivationStatus.ACTIVE);
+                } else {
+                    setActivateStudio(StudioActivationStatus.INACTIVE);
+                }
+                return;
+            } 
+
+            if (start == null) {
+                start = performance.now();
+                requestAnimationFrame(measureAnimationFrameIntervals);
+            } else {
+                const now = performance.now();
+                const diff = now - start!;
+                sum += diff;
+                count++;
+                start = now;
+                requestAnimationFrame(measureAnimationFrameIntervals);
+            }
+        }
+
+        animationFrameRef.current = requestAnimationFrame(measureAnimationFrameIntervals);
+
+        return () => {
+            if (animationFrameRef.current) {
+                cancelAnimationFrame(animationFrameRef.current);
+            }
+        };
+    }, []);
+
     return (
         <Router>
             <Routes>

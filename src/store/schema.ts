@@ -3,6 +3,12 @@ export type Intensity = {
     current: number;
 };
 
+export enum StudioActivationStatus {
+    ACTIVE = "active",
+    INACTIVE = "inactive",
+    LOADING = "loading",
+}
+
 export type LooperState = "idle" | "playing" | "stop-playing" | "saving-recording" | "ready-for-count-in" | "count-in" | "recording";
 
 export type MicrophonePermissionStatus = "granted" | "denied" | "loading" | "prompt";
@@ -23,8 +29,10 @@ export interface Bar {
 
 export type AppState = {
     // general
+    activateStudio: StudioActivationStatus;
     amps: number[];
     intensity: Intensity;
+    setActivateStudio: (activateStudio: StudioActivationStatus) => void;
     setAmps: (amps: number[]) => void;
     setIntensity: (intensity: Intensity) => void;
 

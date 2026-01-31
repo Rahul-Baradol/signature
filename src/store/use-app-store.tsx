@@ -1,10 +1,12 @@
 import { create } from "zustand";
-import type { AppState, Bar, LooperState, MicrophonePermissionStatus, StudioMode, TimeSignature } from "./schema";
+import { StudioActivationStatus, type AppState, type Bar, type LooperState, type MicrophonePermissionStatus, type StudioMode, type TimeSignature } from "./schema";
 
 export const useAppStore = create<AppState>((set) => ({
     // general
+    activateStudio: StudioActivationStatus.LOADING,
     amps: [],
     intensity: { prev: 0, current: 0 },
+    setActivateStudio: (activateStudio: StudioActivationStatus) => set({ activateStudio }),
     setIntensity: (intensity) => set({ intensity }),
     setAmps: (amps) => set({ amps }),
     

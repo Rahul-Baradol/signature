@@ -2,16 +2,16 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import { SocialSidebar } from '@/components/social-sidebar';
 import { motion } from 'framer-motion';
-import { House, MaximizeIcon, Mic, MinimizeIcon } from 'lucide-react';
+import { House, LoaderCircle, MaximizeIcon, Mic, MinimizeIcon } from 'lucide-react';
 import { useAppStore } from '@/store/use-app-store';
 import { calculateAmpsForPerformanceMode, PerformanceMode } from '@/utils/performance-mode-util';
 import { calculateIntensityFrame } from '@/utils/visualizer-util';
 import { easeInOut, gaussian, step } from '@/utils/math';
 import { StudioPanel } from '@/components/studio-panel';
-import type { Bar } from '@/store/schema';
+import { StudioActivationStatus, type Bar } from '@/store/schema';
 
 export const StudioLayout = () => {
-    const { count, timeSignature, bpm, studioMode, intensity, setAmps, setIntensity, microphonePermission, setMicrophonePermission, isMetronomeActive, looperState, bars, addBar, setLooperState, setIsMetronomeActive, setTimeSignature } = useAppStore();
+    const { activateStudio, count, timeSignature, bpm, studioMode, intensity, setAmps, setIntensity, microphonePermission, setMicrophonePermission, isMetronomeActive, looperState, bars, addBar, setLooperState, setIsMetronomeActive, setTimeSignature } = useAppStore();
 
     const navigate = useNavigate();
     const containerRef = useRef<HTMLDivElement>(null);
@@ -70,7 +70,7 @@ export const StudioLayout = () => {
         }
 
         const newBar: Bar = {
-            name: `Bar ${bars.length + 1}`,
+            name: `Loop ${bars.length + 1}`,
             timesignature: timeSignature,
             bpm: bpm,
             muted: false,
@@ -366,6 +366,23 @@ export const StudioLayout = () => {
             audioCtxRef.current = null;
         };
     }, [microphonePermission]);
+
+    if (activateStudio === StudioActivationStatus.LOADING) {
+        return (
+            <div className="h-screen w-screen bg-black flex items-center justify-center gap-2">
+                <span className='text-sm italic'>Profiling Your Device's Capabilities</span>
+                <LoaderCircle className="animate-spin" />
+            </div>
+        )
+    }
+
+    if (activateStudio === StudioActivationStatus.INACTIVE) {
+        return (
+            <div className="h-screen w-screen bg-black flex items-center justify-center gap-2">
+                <span className='text-sm italic'>Nice try, but hardware doesn't support yet :(</span>
+            </div>
+        )
+    }
 
     return (
         <div

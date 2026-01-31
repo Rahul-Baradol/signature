@@ -3,7 +3,8 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/use-app-store';
 import { SocialSidebar } from '@/components/social-sidebar';
-import { Play, ArrowRight } from 'lucide-react'; 
+import { Play, ArrowRight, LoaderCircle } from 'lucide-react';
+import { StudioActivationStatus } from '@/store/schema';
 
 const SAMPLES = [
   { id: 1, title: 'Ecstatic Dissolve', artist: 'Me', file: '/mysongs/ecstatic-dissolve.mp3' },
@@ -11,7 +12,7 @@ const SAMPLES = [
 ];
 
 const Landing: React.FC = () => {
-  const { setFile } = useAppStore();
+  const { activateStudio, setFile } = useAppStore();
   const navigate = useNavigate();
   const [videoDownloading, setVideoDownloading] = useState(true);
   const [loadingSample, setLoadingSample] = useState<number | null>(null);
@@ -95,16 +96,31 @@ const Landing: React.FC = () => {
               </div>
 
               <div className="group relative">
-                <motion.div
-                  whileHover={{ scale: 1.05, backgroundColor: '#38bdf8' }}
-                  whileTap={{ scale: 0.95 }}
-                  className="relative z-10 px-10 py-5 bg-white text-black font-bold text-[11px] tracking-widest uppercase rounded-full transition-all duration-300 group-hover:shadow-[0_0_30px_rgba(56,189,248,0.4)] cursor-pointer"
-                  onClick={() => {
-                    navigate("/studio")
-                  }}
-                >
-                  Go to studio
-                </motion.div>
+                <div className="relative group">
+                  <motion.div
+                    whileHover={activateStudio ? { scale: 1.05, backgroundColor: '#38bdf8' } : {}}
+                    whileTap={activateStudio ? { scale: 0.95 } : {}}
+                    className={`flex flex-row items-center gap-2 relative z-10 px-10 py-5 bg-white text-black font-bold text-[11px] tracking-widest uppercase rounded-full transition-all duration-300 group-hover:shadow-[0_0_30px_rgba(56,189,248,0.4)] cursor-pointer ${(activateStudio !== StudioActivationStatus.ACTIVE) ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
+                    onClick={() => {
+                      if (activateStudio == StudioActivationStatus.ACTIVE) {
+                        navigate('/studio')
+                      }
+                    }}
+                  >
+                    <span>Go to studio</span>
+                    {activateStudio === StudioActivationStatus.LOADING ? <LoaderCircle className='animate-spin' /> : null}
+                  </motion.div>
+
+                  {
+                    (activateStudio === StudioActivationStatus.INACTIVE) && (
+                      <div className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-black px-3 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
+                        Not supported on this hardware
+                      </div>
+                    )
+                  }
+                </div>
+
               </div>
             </div>
 
