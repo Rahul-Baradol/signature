@@ -46,3 +46,13 @@ h1 {
 .animate-sweep {
   animation: sweep 1.2s linear infinite;
 }
+
+/* Hide scrollbar for all elements */
+::-webkit-scrollbar {
+  display: none;
+}
+
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}

@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/use-app-store';
 import { SocialSidebar } from '@/components/social-sidebar';
-import { Play, ArrowRight } from 'lucide-react'; // Assuming lucide-react is installed
+import { Play, ArrowRight } from 'lucide-react'; 
 
 const SAMPLES = [
   { id: 1, title: 'Ecstatic Dissolve', artist: 'Me', file: '/mysongs/ecstatic-dissolve.mp3' },

@@ -1,14 +1,19 @@
 import { rmsRange } from "./math";
 
-export const getMusicTransform = (intensity: number) => {
+export const getMusicTransform = (intensity: number, enableSkew: boolean = true) => {
   const multiplier = 10;
   const alpha = Math.log(1 + (multiplier * intensity)) / Math.log(1 + multiplier);
 
   const scale = 1 + (alpha * 2.5);
   const skewY = (alpha * -10);
   const skewX = (alpha * 5);
+  
+  let property = `scale(${scale})`;
+  if (enableSkew) {
+    property += ` skewY(${skewY}deg) skewX(${skewX}deg)`;
+  }
 
-  return `scale(${scale}) skewY(${skewY}deg) skewX(${skewX}deg)`;
+  return property;
 };
 
 export const getBackgroundGradient = (amps: number[]) => {

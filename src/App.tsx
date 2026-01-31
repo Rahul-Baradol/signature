@@ -6,6 +6,7 @@ import { AnimationLayout } from '@/layouts/animation-layout';
 import { StudioLayout } from './layouts/studio-layout';
 import OpenmicStudio from './pages/studio/openmic';
 import Metronome from './pages/studio/metronome';
+import Looper from './pages/studio/looper';
 
 function App() {
     return (
@@ -21,6 +22,7 @@ function App() {
                 <Route path="/studio" element={<StudioLayout />}>
                     <Route index element={<OpenmicStudio />} />
                     <Route path="metronome" element={<Metronome />} />
+                    <Route path="looper" element={<Looper />} />
                 </Route>
             </Routes>
         </Router>

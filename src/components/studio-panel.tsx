@@ -1,6 +1,6 @@
 import { useAppStore } from '@/store/use-app-store';
 import { motion } from 'framer-motion';
-import { AlarmClockCheck, MicVocal } from "lucide-react";
+import { AlarmClockCheck, MicVocal, Repeat } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 export const StudioPanel = () => {
@@ -14,12 +14,13 @@ export const StudioPanel = () => {
   };
 
   const panelItems = [
-    { path: '/studio', label: 'Openmic', icon: <MicVocal className='w-5 h-5' /> },
     { path: '/studio/metronome', label: 'Metronome', icon: <AlarmClockCheck className='w-5 h-5' /> },
+    { path: '/studio', label: 'Openmic', icon: <MicVocal className='w-5 h-5' /> },
+    { path: '/studio/looper', label: 'Looper', icon: <Repeat className='w-5 h-5' /> },
   ];
 
   return (
-    <div className="flex flex-col gap-4 z-5 rounded-full bg-transparent/20 backdrop-blur-md ">
+    <div className="flex flex-col gap-4 z-5 rounded-full bg-transparent/20 ">
       {panelItems.map((item, index) => (
         <motion.button
           key={index}

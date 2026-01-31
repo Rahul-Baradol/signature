@@ -1,19 +1,22 @@
 import { SlMusicToneAlt } from "react-icons/sl";
-
 import { getMusicTransform, getBackgroundGradient } from "@/utils/visualizer-util";
-
 import { useAppStore } from "@/store/use-app-store";
-import { Particles } from "@/components/particles.tsx";
+import { useEffect } from "react";
+import { MetronomeControls } from "@/components/controls";
 
-export default function GradientDesign() {
-  const { amps, intensity } = useAppStore();
+export default function Looper() {
+  const { amps, count, intensity, microphonePermission, isMetronomeActive, setStudioMode } = useAppStore();
+
+  useEffect(() => {
+    setStudioMode("looper")
+  }, [])
 
   const containerStyle = {
     background: getBackgroundGradient(amps),
   };
 
   const musicIconStyle = {
-    transform: getMusicTransform(intensity.current),
+    transform: getMusicTransform(intensity.current, false),
   };
 
   return (
@@ -26,11 +29,13 @@ export default function GradientDesign() {
           style={musicIconStyle}
           className="text-[30px] transition-all duration-1500 ease-out font-bold text-white"
         >
-          <SlMusicToneAlt />
+          {
+            (isMetronomeActive ? count : <SlMusicToneAlt />)
+          }
         </div>
-        <Particles beatIntensity={intensity} />
-        {/* <AudioGradientCanvas amps={amps} /> */}
       </div>
+
+      {(microphonePermission == "granted") ? <MetronomeControls /> : null}
     </div>
   );
 }

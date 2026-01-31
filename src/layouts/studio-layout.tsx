@@ -8,9 +8,10 @@ import { calculateAmpsForPerformanceMode, PerformanceMode } from '@/utils/perfor
 import { calculateIntensityFrame } from '@/utils/visualizer-util';
 import { easeInOut, gaussian, step } from '@/utils/math';
 import { StudioPanel } from '@/components/studio-panel';
+import type { Bar } from '@/store/schema';
 
 export const StudioLayout = () => {
-    const { studioMode, intensity, setAmps, setIntensity, microphonePermission, setMicrophonePermission } = useAppStore();
+    const { count, timeSignature, bpm, studioMode, intensity, setAmps, setIntensity, microphonePermission, setMicrophonePermission, isMetronomeActive, looperState, bars, addBar, setLooperState, setIsMetronomeActive, setTimeSignature } = useAppStore();
 
     const containerRef = useRef<HTMLDivElement>(null);
     const [isFullscreen, setIsFullscreen] = useState(false);
@@ -19,6 +20,170 @@ export const StudioLayout = () => {
     const analyserRef = useRef<AnalyserNode | null>(null);
     const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
     const animationFrameRef = useRef<number | null>(null);
+
+    const workletNodeRef = useRef<AudioWorkletNode | null>(null);
+    const recordedChunks = useRef<Float32Array[]>([]);
+
+    const loopIntervalId = useRef<NodeJS.Timeout | null>(null);
+    const activeSourcesRef = useRef<AudioBufferSourceNode[]>([]);
+
+    const startRecording = async () => {
+        if (!audioCtxRef.current) {
+            return;
+        }
+
+        await audioCtxRef.current.audioWorklet.addModule('/recorder-processor.js');
+
+        const workletNode = new AudioWorkletNode(audioCtxRef.current, 'recorder-processor');
+
+        workletNode.port.onmessage = (e) => {
+            if (e.data.command === 'DATA') {
+                recordedChunks.current.push(new Float32Array(e.data.buffer));
+            }
+        };
+
+        sourceRef.current?.connect(workletNode);
+
+        workletNode.port.postMessage({ command: 'START' });
+        workletNodeRef.current = workletNode;
+    };
+
+    const stopRecording = () => {
+        if (audioCtxRef.current == null || workletNodeRef.current == null) {
+            return;
+        }
+        workletNodeRef.current?.port.postMessage({ command: 'STOP' });
+
+        const totalLength = recordedChunks.current.reduce((acc, chunk) => acc + chunk.length, 0);
+        const audioBuffer = audioCtxRef.current!.createBuffer(
+            1,
+            totalLength,
+            audioCtxRef.current!.sampleRate
+        );
+
+        const channelData = audioBuffer.getChannelData(0);
+        let offset = 0;
+        for (const chunk of recordedChunks.current) {
+            channelData.set(chunk, offset);
+            offset += chunk.length;
+        }
+
+        const newBar: Bar = {
+            name: `Bar ${bars.length + 1}`,
+            timesignature: timeSignature,
+            bpm: bpm,
+            muted: false,
+            recordedBuffer: audioBuffer
+        };
+
+        addBar(newBar);
+        
+        recordedChunks.current = [];
+        setLooperState("idle");
+    };
+
+    const playAndLoopAllBars = () => {
+        if (loopIntervalId.current) {
+            clearInterval(loopIntervalId.current)
+            loopIntervalId.current = null;
+        }
+
+        const context = audioCtxRef.current;
+        const mainAnalyser = analyserRef.current;
+
+        if (!context || !mainAnalyser || bars.length === 0) {
+            return;
+        }
+
+        const mixer = context.createGain();
+        mixer.connect(mainAnalyser);
+        mixer.connect(context.destination);
+
+        let beatTimeInSecond = (60 / bpm);
+        if (timeSignature === "6/8") {
+            beatTimeInSecond /= 2;
+        }
+
+        let barDurationInSecond;
+        if (timeSignature == "4/4") {
+            barDurationInSecond = beatTimeInSecond * 4;
+        } else if (timeSignature == "3/4") {
+            barDurationInSecond = beatTimeInSecond * 3;
+        } else if (timeSignature == "2/4") {
+            barDurationInSecond = beatTimeInSecond * 2;
+        } else if (timeSignature === "6/8") {
+            barDurationInSecond = beatTimeInSecond * 6;
+        }
+
+        const scheduleLoop = (startTime: number) => {
+            activeSourcesRef.current = []
+
+            bars.forEach((bar) => {
+                if (!bar.recordedBuffer || bar.muted) {
+                    return;
+                }
+
+                const source = context.createBufferSource();
+                activeSourcesRef.current.push(source);
+
+                source.buffer = bar.recordedBuffer;                
+                source.connect(mixer);
+                source.start(startTime);
+            });
+        }
+
+        scheduleLoop(context.currentTime + beatTimeInSecond);
+
+        if (barDurationInSecond && beatTimeInSecond) {
+            loopIntervalId.current = setInterval(() => {
+                scheduleLoop(context.currentTime + beatTimeInSecond);
+            }, barDurationInSecond * 1000);
+        }
+    };
+
+    const stopAllBars = () => {
+        if (loopIntervalId.current) {
+            clearInterval(loopIntervalId.current);
+        }
+        loopIntervalId.current = null;
+
+        activeSourcesRef.current.forEach(src => {
+            try { src.stop(); } catch { }
+        });
+
+        activeSourcesRef.current = [];
+        setLooperState("idle");
+    };
+
+    useEffect(() => {
+        if (count == 1) {
+            switch (looperState) {
+                case "ready-for-count-in":
+                    setLooperState("count-in");
+                    break;
+                case "count-in":
+                    setLooperState("recording");
+                    break;
+                case "recording":
+                    setLooperState("saving-recording");
+                    setIsMetronomeActive(false);
+                    break;
+            }
+        }
+    }, [count])
+
+    useEffect(() => {
+        if (isMetronomeActive && looperState === "recording") {
+            startRecording();
+        } else if (!isMetronomeActive && looperState === "saving-recording") {
+            stopRecording();
+        } else if (isMetronomeActive && looperState === "playing") {
+            playAndLoopAllBars();
+        } else if (!isMetronomeActive && looperState === "stop-playing") {
+            stopAllBars();
+            setIsMetronomeActive(false);
+        }
+    }, [isMetronomeActive, looperState])
 
     const toggleFullscreen = () => {
         if (!document.fullscreenElement) {
@@ -139,6 +304,10 @@ export const StudioLayout = () => {
             tick();
         }
 
+        if (studioMode === "looper" && bars.length > 0) {
+            setTimeSignature(bars[0].timesignature);
+        }
+
         return () => {
             if (animationFrameRef.current) {
                 cancelAnimationFrame(animationFrameRef.current);
@@ -222,7 +391,7 @@ export const StudioLayout = () => {
                     transition={{ type: "spring", stiffness: 400, damping: 17 }}
                     onClick={requestMic}
                     disabled={microphonePermission === "loading"}
-                    className={`group absolute w-[240px] h-[50px] bottom-20 left-1/2 z-50
+                    className={`group absolute w-60 h-12.5 bottom-20 left-1/2 z-50
                  flex items-center justify-center gap-2 
                  rounded-full bg-black text-white text-sm font-semibold shadow-xl border border-white cursor-pointer
                  `}
