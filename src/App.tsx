@@ -24,7 +24,6 @@ function App() {
         function measureAnimationFrameIntervals() {
             if (count == 120) {
                 const avgTime = sum / count;
-                console.log(avgTime)
                 if (avgTime <= 17) {
                     setActivateStudio(StudioActivationStatus.ACTIVE);
                 } else {

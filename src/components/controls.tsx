@@ -49,9 +49,8 @@ export function MetronomeControls() {
 
     useEffect(() => {
         const onKeyDown = (e: KeyboardEvent) => {
-            e.preventDefault();
-
             if (e.code === "Space") {
+                e.preventDefault();
                 toggleMetronome();
             }
         };
