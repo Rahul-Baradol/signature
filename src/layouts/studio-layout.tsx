@@ -11,7 +11,7 @@ import { StudioPanel } from '@/components/studio-panel';
 import { StudioActivationStatus, type Bar } from '@/store/schema';
 
 export const StudioLayout = () => {
-    const { activateStudio, count, timeSignature, bpm, studioMode, intensity, setAmps, setIntensity, microphonePermission, setMicrophonePermission, isMetronomeActive, looperState, bars, addBar, setLooperState, setIsMetronomeActive, setTimeSignature } = useAppStore();
+    const { activateStudio, count, timeSignature, bpm, studioMode, intensity, setAmps, setBpm, setIntensity, microphonePermission, setMicrophonePermission, isMetronomeActive, looperState, bars, addBar, setLooperState, setIsMetronomeActive, setTimeSignature } = useAppStore();
 
     const navigate = useNavigate();
     const containerRef = useRef<HTMLDivElement>(null);
@@ -306,6 +306,7 @@ export const StudioLayout = () => {
         }
 
         if (studioMode === "looper" && bars.length > 0) {
+            setBpm(bars[0].bpm);
             setTimeSignature(bars[0].timesignature);
         }
 
