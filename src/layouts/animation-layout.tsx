@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { House, MaximizeIcon, MinimizeIcon } from 'lucide-react';
 import { calculateIntensityFrame } from '@/utils/visualizer-util';
 import { normalize, step } from '@/utils/math';
+import { FrameProfiler } from '@/utils/profiling';
 
 export const AnimationLayout = () => {
   const navigate = useNavigate();
@@ -135,6 +136,8 @@ export const AnimationLayout = () => {
 
       await audio.play();
       setIsPlaying(true);
+
+      new FrameProfiler().start();
 
       const tick = () => {
         if (!audioRef.current || !frameMetaRef.current || !ampsFramesRef.current) {
