@@ -1,15 +1,12 @@
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/use-app-store';
 import { useEffect, useRef } from 'react';
 import { AudioControls } from '@/components/audio-controls';
 import { SocialSidebar } from '@/components/social-sidebar';
 import { calculateAmpsForPerformanceMode, PerformanceMode } from '@/utils/performance-mode-util';
-import { motion } from 'framer-motion';
-import * as Icons from 'lucide-react';
 
 export const AnimationLayout = () => {
   const navigate = useNavigate();
-  const location = useLocation();
 
   const { file, isPlaying, currentTime, intensity, setIsPlaying, setAmps, setCurrentTime, setIntensity } = useAppStore();
 
@@ -137,51 +134,8 @@ export const AnimationLayout = () => {
     }
   }, [file]);
 
-  const navItems = [
-    {
-      path: '/signature/gradient',
-      label: 'Gradient Design',
-      color: 'bg-gradient-to-tr from-pink-500 to-yellow-500',
-      icon: Icons.Circle
-    },
-    {
-      path: '/signature/concentric-rings',
-      label: 'Concentric Circles',
-      color: 'bg-slate-800',
-      icon: Icons.Rotate3D
-    },
-  ];
-
   return (
     <div className="relative bg-transparent flex">
-      <nav className="fixed top-5 left-6 z-50 flex flex-col items-center gap-4 px-2.5 py-5 rounded-full shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] border border-white/20">
-        {navItems.map((item) => {
-          const isActive = location.pathname === item.path;
-
-          return (
-            <div key={item.path} className="group relative flex items-center bg-transparent">
-              <motion.button
-                onClick={() => navigate(item.path)}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                className={`relative w-6 h-6 md:w-12 md:h-12 flex items-center justify-center rounded-full transition-colors duration-200 bg-transparent ${isActive ? 'text-white' : 'text-gray-400 hover:text-white'}`}
-              >
-                <div>
-                  <item.icon className='w-3 md:w-5 h-auto' />
-                </div>
-
-                {isActive ? (
-                  <motion.div
-                    layoutId="activeDot"
-                    className="absolute w-6 h-6 md:w-12 md:h-12 border border-white-500 rounded-full"
-                  />
-                ) : <></>}
-              </motion.button>
-            </div>
-          );
-        })}
-      </nav>
-
       <main className="flex-1">
         <Outlet />
 
