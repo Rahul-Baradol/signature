@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import { AudioControls } from '@/components/audio-controls';
 import { SocialSidebar } from '@/components/social-sidebar';
 import { calculateAmpsForPerformanceMode, PerformanceMode } from '@/utils/performance-mode-util';
+import { FrameProfiler } from '@/utils/profiling';
 
 export const AnimationLayout = () => {
   const navigate = useNavigate();
@@ -36,6 +37,9 @@ export const AnimationLayout = () => {
       audioCtxRef.current = audioCtx;
 
       const reader = new FileReader();
+
+      new FrameProfiler().start();
+
       reader.onload = async (e) => {
         const arrayBuffer = e.target?.result as ArrayBuffer;
         const decodedData = await audioCtx.decodeAudioData(arrayBuffer);
