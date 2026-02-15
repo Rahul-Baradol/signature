@@ -3,8 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/use-app-store';
 import { SocialSidebar } from '@/components/social-sidebar';
-import { Play, ArrowRight, LoaderCircle } from 'lucide-react';
-import { StudioActivationStatus } from '@/store/schema';
+import { Play, ArrowRight } from 'lucide-react';
 
 const SAMPLES = [
   { id: 1, title: 'Ecstatic Dissolve', artist: 'Me', file: '/mysongs/ecstatic-dissolve.mp3' },
@@ -12,7 +11,7 @@ const SAMPLES = [
 ];
 
 const Landing: React.FC = () => {
-  const { activateStudio, setFile } = useAppStore();
+  const { setFile } = useAppStore();
   const navigate = useNavigate();
   const [videoDownloading, setVideoDownloading] = useState(true);
   const [loadingSample, setLoadingSample] = useState<number | null>(null);
@@ -96,7 +95,7 @@ const Landing: React.FC = () => {
               </div>
 
               <div className="group relative">
-                <div className="relative group">
+                {/* <div className="relative group">
                   <motion.div
                     whileHover={activateStudio ? { scale: 1.05, backgroundColor: '#38bdf8' } : {}}
                     whileTap={activateStudio ? { scale: 0.95 } : {}}
@@ -119,7 +118,7 @@ const Landing: React.FC = () => {
                       </div>
                     )
                   }
-                </div>
+                </div> */}
 
               </div>
             </div>
