@@ -44,9 +44,11 @@ export const useAppStore = create<AppState>((set) => ({
     // looper states
     bars: [],
     looperState: "idle",
+    loopBarCount: 1,
 
     setBars: (bars: Bar[]) => set({ bars }),
     addBar: (bar: Bar) => set((state) => ({ bars: [bar, ...state.bars] })),
     removeBar: (bar: Bar) => set((state) => ({ bars: state.bars.filter((b) => b !== bar) })),
     setLooperState: (looperState: LooperState) => set({ looperState }),
+    setLoopBarCount: (loopBarCount: number) => set({ loopBarCount }),
 }));

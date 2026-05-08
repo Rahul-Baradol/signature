@@ -11,7 +11,7 @@ import { StudioPanel } from '@/components/studio-panel';
 import { StudioActivationStatus, type Bar } from '@/store/schema';
 
 export const StudioLayout = () => {
-    const { activateStudio, count, timeSignature, bpm, studioMode, intensity, setAmps, setBpm, setIntensity, microphonePermission, setMicrophonePermission, isMetronomeActive, looperState, bars, addBar, setLooperState, setIsMetronomeActive, setTimeSignature } = useAppStore();
+    const { activateStudio, count, timeSignature, bpm, studioMode, intensity, setAmps, setBpm, setIntensity, microphonePermission, setMicrophonePermission, isMetronomeActive, looperState, bars, addBar, setLooperState, setIsMetronomeActive, setTimeSignature, loopBarCount, setLoopBarCount } = useAppStore();
 
     const navigate = useNavigate();
     const containerRef = useRef<HTMLDivElement>(null);
@@ -25,8 +25,9 @@ export const StudioLayout = () => {
     const workletNodeRef = useRef<AudioWorkletNode | null>(null);
     const recordedChunks = useRef<Float32Array[]>([]);
 
-    const loopIntervalId = useRef<NodeJS.Timeout | null>(null);
+    const loopIntervalId = useRef<NodeJS.Timeout[]>([]);
     const activeSourcesRef = useRef<AudioBufferSourceNode[]>([]);
+    const recordedBarsCount = useRef<number>(0);
 
     const startRecording = async () => {
         if (!audioCtxRef.current) {
@@ -73,6 +74,7 @@ export const StudioLayout = () => {
             name: `Loop ${bars.length + 1}`,
             timesignature: timeSignature,
             bpm: bpm,
+            barCount: loopBarCount,
             muted: false,
             recordedBuffer: audioBuffer
         };
@@ -85,8 +87,8 @@ export const StudioLayout = () => {
 
     const playAndLoopAllBars = () => {
         if (loopIntervalId.current) {
-            clearInterval(loopIntervalId.current)
-            loopIntervalId.current = null;
+            loopIntervalId.current.forEach(clearInterval);
+            loopIntervalId.current = [];
         }
 
         const context = audioCtxRef.current;
@@ -105,7 +107,7 @@ export const StudioLayout = () => {
             beatTimeInSecond /= 2;
         }
 
-        let barDurationInSecond;
+        let barDurationInSecond: number;
         if (timeSignature == "4/4") {
             barDurationInSecond = beatTimeInSecond * 4;
         } else if (timeSignature == "3/4") {
@@ -116,37 +118,46 @@ export const StudioLayout = () => {
             barDurationInSecond = beatTimeInSecond * 6;
         }
 
-        const scheduleLoop = (startTime: number) => {
-            activeSourcesRef.current = []
+        const scheduleLoop = (startTime: number, loopIndex: number) => {
+            const concernedBar = bars[loopIndex];
 
-            bars.forEach((bar) => {
-                if (!bar.recordedBuffer || bar.muted) {
-                    return;
+            if (!concernedBar.recordedBuffer || concernedBar.muted) {
+                return;
+            }
+
+            const source = context.createBufferSource();
+            activeSourcesRef.current.push(source);
+
+            source.buffer = concernedBar.recordedBuffer;
+            source.connect(mixer);
+            source.start(startTime);
+        }
+
+        const currentTime = context.currentTime;
+
+        activeSourcesRef.current = [];
+        bars.forEach((bar: Bar, barIndex: number)=> {
+            scheduleLoop(currentTime + beatTimeInSecond, barIndex);
+
+            const loopDurationInSecond = barDurationInSecond ? (barDurationInSecond * bar.barCount) : undefined;
+            console.log(`Scheduling loop for Bar ${barIndex + 1} with duration ${loopDurationInSecond}s and beat time ${beatTimeInSecond}s`);
+            if (loopDurationInSecond && beatTimeInSecond) {
+                const intervalId = setInterval(() => {
+                    scheduleLoop(currentTime + beatTimeInSecond, barIndex);
+                }, loopDurationInSecond * 1000);
+
+                if (loopIntervalId.current) {
+                    loopIntervalId.current.push(intervalId);
                 }
-
-                const source = context.createBufferSource();
-                activeSourcesRef.current.push(source);
-
-                source.buffer = bar.recordedBuffer;
-                source.connect(mixer);
-                source.start(startTime);
-            });
-        }
-
-        scheduleLoop(context.currentTime + beatTimeInSecond);
-
-        if (barDurationInSecond && beatTimeInSecond) {
-            loopIntervalId.current = setInterval(() => {
-                scheduleLoop(context.currentTime + beatTimeInSecond);
-            }, barDurationInSecond * 1000);
-        }
+            }
+        });
     };
 
     const stopAllBars = () => {
         if (loopIntervalId.current) {
-            clearInterval(loopIntervalId.current);
+            loopIntervalId.current.forEach(clearInterval);
         }
-        loopIntervalId.current = null;
+        loopIntervalId.current = [];
 
         activeSourcesRef.current.forEach(src => {
             try { src.stop(); } catch { }
@@ -163,11 +174,15 @@ export const StudioLayout = () => {
                     setLooperState("count-in");
                     break;
                 case "count-in":
+                    recordedBarsCount.current = 0;
                     setLooperState("recording");
                     break;
                 case "recording":
-                    setLooperState("saving-recording");
-                    setIsMetronomeActive(false);
+                    recordedBarsCount.current += 1;
+                    if (recordedBarsCount.current >= loopBarCount) {
+                        setLooperState("saving-recording");
+                        setIsMetronomeActive(false);
+                    }
                     break;
             }
         }
@@ -308,6 +323,7 @@ export const StudioLayout = () => {
         if (studioMode === "looper" && bars.length > 0) {
             setBpm(bars[0].bpm);
             setTimeSignature(bars[0].timesignature);
+            setLoopBarCount(bars[0].barCount);
         }
 
         return () => {

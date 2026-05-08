@@ -12,13 +12,15 @@ export function MetronomeControls() {
         bpm,
         timeSignature,
         bars,
+        loopBarCount,
         setBars,
         setBpm,
         setLooperState,
         setTimeSignature,
         setIsMetronomeActive,
         setCount,
-        setIntensity
+        setIntensity,
+        setLoopBarCount,
     } = useAppStore();
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -207,6 +209,23 @@ export function MetronomeControls() {
                             {item}
                         </motion.button>
                     ))}
+                    {studioMode === "looper" && (
+                        <>
+                            <div className="h-4 border border-white/30"></div>
+                            <div className={`flex flex-row items-center gap-2 px-4 py-3 border border-white/10 rounded-full transition-opacity duration-200`}>
+                                <span className="text-white text-sm">Bars</span>
+                                <button
+                                    onClick={() => setLoopBarCount(Math.max(1, loopBarCount - 1))}
+                                    className="text-white text-sm w-5 h-5 flex items-center justify-center rounded hover:bg-white/10 disabled:cursor-not-allowed"
+                                >-</button>
+                                <span className="text-white text-sm w-4 text-center">{loopBarCount}</span>
+                                <button
+                                    onClick={() => setLoopBarCount(Math.min(8, loopBarCount + 1))}
+                                    className="text-white text-sm w-5 h-5 flex items-center justify-center rounded hover:bg-white/10 disabled:cursor-not-allowed"
+                                >+</button>
+                            </div>
+                        </>
+                    )}
                 </motion.div>
             </div>
 
@@ -396,6 +415,27 @@ export function MetronomeControls() {
                                 </div>
                             </div>
 
+                            {
+                                studioMode === "looper" ? <div className="flex flex-col gap-4">
+                                    <span className="text-white/40 text-xs uppercase">Bars per loop</span>
+                                    <div className={`flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/10 transition-opacity duration-200 ${disableMeterControls() ? 'opacity-40' : 'opacity-100'}`}>
+                                        <span className="text-white text-sm">Bars</span>
+                                        <div className="flex items-center gap-3">
+                                            <button
+                                                disabled={disableMeterControls()}
+                                                onClick={() => setLoopBarCount(Math.max(1, loopBarCount - 1))}
+                                                className="text-white text-xl w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 disabled:cursor-not-allowed"
+                                            >-</button>
+                                            <span className="text-white text-xl w-6 text-center">{loopBarCount}</span>
+                                            <button
+                                                disabled={disableMeterControls()}
+                                                onClick={() => setLoopBarCount(Math.min(8, loopBarCount + 1))}
+                                                className="text-white text-xl w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 disabled:cursor-not-allowed"
+                                            >+</button>
+                                        </div>
+                                    </div>
+                                </div> : null
+                            }
                             {
                                 studioMode === "looper" ? <div className="flex flex-col gap-4 h-full">
                                     <span className="text-white/40 text-xs uppercase">Loops</span>

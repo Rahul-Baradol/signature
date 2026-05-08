@@ -22,6 +22,7 @@ export type TimeSignature = typeof TIME_SIGNATURES[number];
 export interface Bar {
     timesignature: TimeSignature;
     bpm: number;
+    barCount: number;
     name: string;
     muted: boolean;
     recordedBuffer: AudioBuffer;
@@ -70,9 +71,11 @@ export type AppState = {
     // looper states
     bars: Bar[];
     looperState: LooperState;
+    loopBarCount: number;
 
     addBar: (bar: Bar) => void;
     removeBar: (bar: Bar) => void;
     setBars: (bars: Bar[]) => void;
     setLooperState: (looperState: LooperState) => void;
+    setLoopBarCount: (loopBarCount: number) => void;
 };
