@@ -140,10 +140,9 @@ export const StudioLayout = () => {
             scheduleLoop(currentTime + beatTimeInSecond, barIndex);
 
             const loopDurationInSecond = barDurationInSecond ? (barDurationInSecond * bar.barCount) : undefined;
-            console.log(`Scheduling loop for Bar ${barIndex + 1} with duration ${loopDurationInSecond}s and beat time ${beatTimeInSecond}s`);
             if (loopDurationInSecond && beatTimeInSecond) {
                 const intervalId = setInterval(() => {
-                    scheduleLoop(currentTime + beatTimeInSecond, barIndex);
+                    scheduleLoop(context.currentTime + beatTimeInSecond, barIndex);
                 }, loopDurationInSecond * 1000);
 
                 if (loopIntervalId.current) {
