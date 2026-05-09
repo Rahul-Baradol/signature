@@ -5,6 +5,7 @@ import { useAppStore } from '@/store/use-app-store';
 import { SocialSidebar } from '@/components/social-sidebar';
 import { Play, ArrowRight, LoaderCircle } from 'lucide-react';
 import { StudioActivationStatus } from '@/store/schema';
+import { deserializeLooperState } from '@/utils/looper-file-util';
 
 const SAMPLES = [
   { id: 1, title: 'Ecstatic Dissolve', artist: 'Me', file: '/mysongs/ecstatic-dissolve.mp3' },
@@ -12,11 +13,11 @@ const SAMPLES = [
 ];
 
 const Landing: React.FC = () => {
-  const { setFile } = useAppStore();
+  const { setFile, activateStudio, setLoops, setBpm, setTimeSignature, setLoopBarCount } = useAppStore();
   const navigate = useNavigate();
   const [videoDownloading, setVideoDownloading] = useState(true);
   const [loadingSample, setLoadingSample] = useState<number | null>(null);
-  const { activateStudio } = useAppStore();
+  const [loadingDemo, setLoadingDemo] = useState(false);
 
   const handleSampleSelect = async (sample: typeof SAMPLES[0]) => {
     setLoadingSample(sample.id);
@@ -26,11 +27,27 @@ const Landing: React.FC = () => {
       const file = new File([blob], `${sample.title}.mp3`, { type: 'audio/mpeg' });
 
       setFile(file);
-      // Small delay for the "feel" of the interaction
       setTimeout(() => navigate('/signature/gradient'), 400);
     } catch (error) {
       console.error("Error loading sample:", error);
       setLoadingSample(null);
+    }
+  };
+
+  const handleDemoLooper = async () => {
+    setLoadingDemo(true);
+    try {
+      const response = await fetch('/cold.signature');
+      const text = await response.text();
+      const state = deserializeLooperState(text);
+      setLoops(state.loops);
+      setBpm(state.bpm);
+      setTimeSignature(state.timeSignature);
+      setLoopBarCount(state.loopBarCount);
+      setTimeout(() => navigate('/studio/looper'), 400);
+    } catch (error) {
+      console.error("Error loading demo:", error);
+      setLoadingDemo(false);
     }
   };
 
@@ -55,7 +72,7 @@ const Landing: React.FC = () => {
             transition={{ delay: 0.5 }}
             className="inline-block text-sky-400 text-[10px] font-bold tracking-[0.4em] uppercase mb-4"
           >
-            Digital Audio Visualizer
+            Mini Music Studio
           </motion.span>
 
           <h1 className="text-7xl md:text-9xl font-black tracking-tight mb-8 leading-[0.85]">
@@ -66,7 +83,7 @@ const Landing: React.FC = () => {
           </h1>
 
           <p className="max-w-sm text-slate-400 text-lg font-light mb-10 leading-relaxed ">
-            Immerse yourself in a captivating visualization.
+            A platform to visualize and create music.
           </p>
 
           <div className="flex flex-col gap-10">
@@ -126,9 +143,10 @@ const Landing: React.FC = () => {
             </div>
 
             <div className="flex flex-col gap-5">
-              <div className="flex items-center gap-4 mb-2">
+              {/* Visualizer quick peek */}
+              <div className="flex items-center gap-4">
                 <div className="h-px w-8 bg-slate-700" />
-                <span className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Quick Start with My Production</span>
+                <span className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Visualizer — peek at my production</span>
                 <div className="h-px w-8 bg-slate-700" />
               </div>
 
@@ -141,7 +159,7 @@ const Landing: React.FC = () => {
                     transition={{ delay: 0.7 + (idx * 0.1) }}
                     onClick={() => handleSampleSelect(sample)}
                     disabled={loadingSample !== null}
-                    className="group relative flex items-center gap-4 px-5 py-3 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all duration-300 cursor-pointer"
+                    className="group relative flex items-center gap-4 px-5 py-3 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all duration-300 cursor-pointer disabled:opacity-50"
                   >
                     <div className="relative flex items-center justify-center w-8 h-8 rounded-full bg-sky-500/20 text-sky-400 group-hover:bg-sky-500 group-hover:text-black transition-colors">
                       {loadingSample === sample.id ? (
@@ -156,6 +174,42 @@ const Landing: React.FC = () => {
                     <ArrowRight size={14} className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-sky-400" />
                   </motion.button>
                 ))}
+              </div>
+
+              {/* Looper demo */}
+              <div className="flex items-center gap-4">
+                <div className="h-px w-8 bg-slate-700" />
+                <span className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Looper — try the studio</span>
+                <div className="h-px flex-1 max-w-8 bg-slate-700" />
+              </div>
+
+              <div className="relative group w-fit">
+                <motion.button
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.9 }}
+                  onClick={handleDemoLooper}
+                  disabled={activateStudio !== StudioActivationStatus.ACTIVE || loadingDemo}
+                  className="group relative flex items-center gap-4 px-5 py-3 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <div className="relative flex items-center justify-center w-8 h-8 rounded-full bg-sky-500/20 text-sky-400 group-hover:bg-sky-500 group-hover:text-black transition-colors">
+                    {loadingDemo ? (
+                      <div className="w-4 h-4 border-2 border-current border-t-transparent animate-spin rounded-full" />
+                    ) : (
+                      <Play size={14} fill="currentColor" />
+                    )}
+                  </div>
+                  <div className="text-left">
+                    <p className="text-xs font-bold tracking-wide text-slate-200 group-hover:text-white transition-colors">Cold</p>
+                    <p className="text-[10px] text-slate-500 group-hover:text-slate-400 transition-colors">A sample 2-bar loop</p>
+                  </div>
+                  <ArrowRight size={14} className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-sky-400" />
+                </motion.button>
+                {activateStudio === StudioActivationStatus.INACTIVE && (
+                  <div className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-black px-3 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
+                    Not supported on this hardware
+                  </div>
+                )}
               </div>
             </div>
           </div>
