@@ -2,7 +2,7 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import { SocialSidebar } from '@/components/social-sidebar';
 import { motion } from 'framer-motion';
-import { House, LoaderCircle, MaximizeIcon, Mic, MinimizeIcon } from 'lucide-react';
+import { House, LoaderCircle, MaximizeIcon, Mic, MinimizeIcon, Monitor } from 'lucide-react';
 import { useAppStore } from '@/store/use-app-store';
 import { calculateAmpsForPerformanceMode, PerformanceMode } from '@/utils/performance-mode-util';
 import { calculateIntensityFrame } from '@/utils/visualizer-util';
@@ -394,6 +394,22 @@ export const StudioLayout = () => {
             audioCtxRef.current = null;
         };
     }, [microphonePermission]);
+
+    const isMobile = /iPhone|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
+
+    if (isMobile) {
+        return (
+            <div className="h-screen w-screen bg-black flex flex-col items-center justify-center gap-5 px-8 text-center">
+                <Monitor className="w-10 h-10 text-white/50" />
+                <div className="flex flex-col gap-2">
+                    <span className="text-base font-semibold text-white">Open on Desktop</span>
+                    <span className="text-sm text-white/50 max-w-xs">
+                        Studio is designed for desktop and laptop screens. Please visit on a larger device for the best experience.
+                    </span>
+                </div>
+            </div>
+        );
+    }
 
     if (activateStudio === StudioActivationStatus.LOADING) {
         return (

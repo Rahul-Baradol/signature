@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/use-app-store';
 import { SocialSidebar } from '@/components/social-sidebar';
-import { Play, ArrowRight, LoaderCircle } from 'lucide-react';
+import { Play, ArrowRight, LoaderCircle, Monitor } from 'lucide-react';
 import { StudioActivationStatus } from '@/store/schema';
 import { deserializeLooperState } from '@/utils/looper-file-util';
 
@@ -22,6 +22,7 @@ const Landing: React.FC = () => {
     setLoops, setLooperState, setLoopBarCount,
   } = useAppStore();
   const navigate = useNavigate();
+  const isMobile = /iPhone|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
   const [videoDownloading, setVideoDownloading] = useState(true);
   const [loadingSample, setLoadingSample] = useState<number | null>(null);
   const [loadingDemo, setLoadingDemo] = useState(false);
@@ -139,36 +140,37 @@ const Landing: React.FC = () => {
                 </label>
               </div>
 
-              <div className="group relative">
-                <div className="relative group">
-                  <motion.div
-                    whileHover={activateStudio ? { scale: 1.05, backgroundColor: '#38bdf8' } : {}}
-                    whileTap={activateStudio ? { scale: 0.95 } : {}}
-                    className={`uppercase flex flex-row items-center gap-2 relative z-10 px-10 py-5 bg-white text-black font-bold text-[11px] tracking-widest rounded-full transition-all duration-300 group-hover:shadow-[0_0_30px_rgba(56,189,248,0.4)] cursor-pointer ${(activateStudio !== StudioActivationStatus.ACTIVE) ? 'opacity-50 cursor-not-allowed' : ''
-                      }`}
-                    onClick={() => {
-                      if (activateStudio == StudioActivationStatus.ACTIVE) {
-                        navigate('/studio/looper')
-                      }
-                    }}
-                  >
-                    <span>Go to studio</span>
-                    {activateStudio === StudioActivationStatus.LOADING ? <LoaderCircle className='animate-spin' /> : null}
-                  </motion.div>
+              {!isMobile && (
+                <div className="group relative">
+                  <div className="relative group">
+                    <motion.div
+                      whileHover={activateStudio ? { scale: 1.05, backgroundColor: '#38bdf8' } : {}}
+                      whileTap={activateStudio ? { scale: 0.95 } : {}}
+                      className={`uppercase flex flex-row items-center gap-2 relative z-10 px-10 py-5 bg-white text-black font-bold text-[11px] tracking-widest rounded-full transition-all duration-300 group-hover:shadow-[0_0_30px_rgba(56,189,248,0.4)] cursor-pointer ${(activateStudio !== StudioActivationStatus.ACTIVE) ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
+                      onClick={() => {
+                        if (activateStudio == StudioActivationStatus.ACTIVE) {
+                          navigate('/studio/looper')
+                        }
+                      }}
+                    >
+                      <span>Go to studio</span>
+                      {activateStudio === StudioActivationStatus.LOADING ? <LoaderCircle className='animate-spin' /> : null}
+                    </motion.div>
 
-                  {activateStudio === StudioActivationStatus.INACTIVE && (
-                    <div className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-black px-3 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
-                      Not supported on this hardware
-                    </div>
-                  )}
-                  {activateStudio === StudioActivationStatus.ACTIVE && (
-                    <div className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-black px-3 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
-                      create your own signature
-                    </div>
-                  )}
+                    {activateStudio === StudioActivationStatus.INACTIVE && (
+                      <div className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-black px-3 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
+                        Not supported on this hardware
+                      </div>
+                    )}
+                    {activateStudio === StudioActivationStatus.ACTIVE && (
+                      <div className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-black px-3 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
+                        create your own signature
+                      </div>
+                    )}
+                  </div>
                 </div>
-
-              </div>
+              )}
             </div>
 
             <div className="flex flex-col gap-5">
@@ -205,41 +207,45 @@ const Landing: React.FC = () => {
                 ))}
               </div>
 
-              {/* Looper demo */}
-              <div className="flex items-center gap-4">
-                <div className="h-px w-8 bg-slate-700" />
-                <span className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Looper — try the studio</span>
-                <div className="h-px flex-1 max-w-8 bg-slate-700" />
-              </div>
+              {!isMobile && (
+                <>
+                  {/* Looper demo */}
+                  <div className="flex items-center gap-4">
+                    <div className="h-px w-8 bg-slate-700" />
+                    <span className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Looper — try the studio</span>
+                    <div className="h-px flex-1 max-w-8 bg-slate-700" />
+                  </div>
 
-              <div className="relative group w-fit">
-                <motion.button
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: (activateStudio === StudioActivationStatus.ACTIVE ? 1 : 0.4), y: 0 }}
-                  transition={{ delay: 0.9 }}
-                  onClick={handleDemoLooper}
-                  disabled={activateStudio !== StudioActivationStatus.ACTIVE || loadingDemo}
-                  className="group relative flex items-center gap-4 px-5 py-3 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <div className="relative flex items-center justify-center w-8 h-8 rounded-full bg-sky-500/20 text-sky-400 group-hover:bg-sky-500 group-hover:text-black transition-colors">
-                    {loadingDemo ? (
-                      <div className="w-4 h-4 border-2 border-current border-t-transparent animate-spin rounded-full" />
-                    ) : (
-                      <Play size={14} fill="currentColor" />
+                  <div className="relative group w-fit">
+                    <motion.button
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: (activateStudio === StudioActivationStatus.ACTIVE ? 1 : 0.4), y: 0 }}
+                      transition={{ delay: 0.9 }}
+                      onClick={handleDemoLooper}
+                      disabled={activateStudio !== StudioActivationStatus.ACTIVE || loadingDemo}
+                      className="group relative flex items-center gap-4 px-5 py-3 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <div className="relative flex items-center justify-center w-8 h-8 rounded-full bg-sky-500/20 text-sky-400 group-hover:bg-sky-500 group-hover:text-black transition-colors">
+                        {loadingDemo ? (
+                          <div className="w-4 h-4 border-2 border-current border-t-transparent animate-spin rounded-full" />
+                        ) : (
+                          <Play size={14} fill="currentColor" />
+                        )}
+                      </div>
+                      <div className="text-left">
+                        <p className="text-xs font-bold tracking-wide text-slate-200 group-hover:text-white transition-colors">Cold</p>
+                        <p className="text-[10px] text-slate-500 group-hover:text-slate-400 transition-colors">A sample 2-bar loop</p>
+                      </div>
+                      <ArrowRight size={14} className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-sky-400" />
+                    </motion.button>
+                    {activateStudio === StudioActivationStatus.INACTIVE && (
+                      <div className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-black px-3 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
+                        Not supported on this hardware
+                      </div>
                     )}
                   </div>
-                  <div className="text-left">
-                    <p className="text-xs font-bold tracking-wide text-slate-200 group-hover:text-white transition-colors">Cold</p>
-                    <p className="text-[10px] text-slate-500 group-hover:text-slate-400 transition-colors">A sample 2-bar loop</p>
-                  </div>
-                  <ArrowRight size={14} className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-sky-400" />
-                </motion.button>
-                {activateStudio === StudioActivationStatus.INACTIVE && (
-                  <div className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-black px-3 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
-                    Not supported on this hardware
-                  </div>
-                )}
-              </div>
+                </>
+              )}
             </div>
           </div>
         </motion.div>
@@ -276,6 +282,22 @@ const Landing: React.FC = () => {
 
 
       </motion.div>
+
+    {isMobile && (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-black/80 backdrop-blur-xl border border-white/15 shadow-2xl w-[calc(100%-3rem)]"
+      >
+        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-amber-500/15 shrink-0">
+          <Monitor className="w-4 h-4 text-amber-400" />
+        </div>
+        <p className="text-xs text-slate-300 leading-relaxed">
+          <span className="font-semibold text-white">Open on desktop</span> — Studio is designed for larger screens and may lag on mobile.
+        </p>
+      </motion.div>
+    )}
 
     </div>
   );
