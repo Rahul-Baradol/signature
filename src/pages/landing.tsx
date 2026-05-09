@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/use-app-store';
@@ -13,11 +13,37 @@ const SAMPLES = [
 ];
 
 const Landing: React.FC = () => {
-  const { setFile, activateStudio, setLoops, setBpm, setTimeSignature, setLoopBarCount } = useAppStore();
+  const {
+    activateStudio,
+    setFile, setIsPlaying, setIsDataReady, setCurrentTime, setCurrentFrame, setHasInitializedAudio,
+    setAmps, setIntensity,
+    setStudioMode, 
+    setCount, setBpm, setTimeSignature, setIsMetronomeActive,
+    setLoops, setLooperState, setLoopBarCount,
+  } = useAppStore();
   const navigate = useNavigate();
   const [videoDownloading, setVideoDownloading] = useState(true);
   const [loadingSample, setLoadingSample] = useState<number | null>(null);
   const [loadingDemo, setLoadingDemo] = useState(false);
+
+  useEffect(() => {
+    setFile(null);
+    setIsPlaying(false);
+    setIsDataReady(false);
+    setCurrentTime(0);
+    setCurrentFrame(0);
+    setHasInitializedAudio(false);
+    setAmps([]);
+    setIntensity({ prev: 0, current: 0 });
+    setStudioMode("looper");
+    setCount(0);
+    setBpm(120);
+    setTimeSignature("4/4");
+    setIsMetronomeActive(false);
+    setLoops([]);
+    setLooperState("idle");
+    setLoopBarCount(1);
+  }, []);
 
   const handleSampleSelect = async (sample: typeof SAMPLES[0]) => {
     setLoadingSample(sample.id);
@@ -44,7 +70,7 @@ const Landing: React.FC = () => {
       setBpm(state.bpm);
       setTimeSignature(state.timeSignature);
       setLoopBarCount(state.loopBarCount);
-      setTimeout(() => navigate('/studio/looper'), 400);
+      navigate('/studio/looper');
     } catch (error) {
       console.error("Error loading demo:", error);
       setLoadingDemo(false);

@@ -305,7 +305,10 @@ export const StudioLayout = () => {
     useEffect(() => {
         const handleFsChange = () => setIsFullscreen(!!document.fullscreenElement);
         document.addEventListener('fullscreenchange', handleFsChange);
-        return () => document.removeEventListener('fullscreenchange', handleFsChange);
+
+        return () => {
+            document.removeEventListener('fullscreenchange', handleFsChange);
+        }
     }, []);
 
     useEffect(() => {
@@ -471,7 +474,7 @@ export const StudioLayout = () => {
                     <div className='flex flex-col items-center gap-5 absolute top-6 left-6'>
                         <motion.button
                             initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
+                            animate={{ opacity: isMetronomeActive ? 0.4 : 1, scale: 1 }}
                             whileHover={{ scale: 1.1, backgroundColor: "rgba(255, 255, 255, 0.15)" }}
                             whileTap={{ scale: 0.9 }}
                             className="z-50 p-2 rounded-full bg-black/20 backdrop-blur-md border border-white/10 transition-all shadow-lg cursor-pointer"
@@ -479,6 +482,7 @@ export const StudioLayout = () => {
                             onClick={(() => {
                                 navigate("/")
                             })}
+                            disabled={isMetronomeActive}
                         >
                             <House className="w-4.5 h-4.5 text-white" />
                         </motion.button>

@@ -4,12 +4,13 @@ import { AnimationLayout } from '@/layouts/animation-layout';
 import { StudioLayout } from './layouts/studio-layout';
 
 const Landing = lazy(() => import('@/pages/landing'));
-const GradientDesign = lazy(() => import('@/pages/gradient'));
 const OpenmicStudio = lazy(() => import('./pages/studio/openmic'));
 const Metronome = lazy(() => import('./pages/studio/metronome'));
 const Looper = lazy(() => import('./pages/studio/looper'));
+
 import { useAppStore } from './store/use-app-store';
 import { StudioActivationStatus } from './store/schema';
+import GradientDesign from './pages/gradient';
 
 function App() {
     const { setActivateStudio } = useAppStore();

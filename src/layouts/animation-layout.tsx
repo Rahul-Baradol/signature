@@ -198,6 +198,11 @@ export const AnimationLayout = () => {
       reader.abort();
       audioRef.current?.pause();
       audioCtxRef.current?.close();
+      setAmps([]);
+      setIntensity({
+        prev: 0,
+        current: 0
+      });
     };
   }, [file]);
 

@@ -27,7 +27,7 @@ export function MetronomeControls() {
     } = useAppStore();
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [metronomeIntervalId, setMetronomeIntervalId] = useState<NodeJS.Timeout | null>(null);
+    const metronomeIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const [saveModalOpen, setSaveModalOpen] = useState(false);
     const [saveName, setSaveName] = useState("");
     const [exportMp3ModalOpen, setExportMp3ModalOpen] = useState(false);
@@ -156,34 +156,33 @@ export function MetronomeControls() {
     }
 
     useEffect(() => {
-        if (metronomeIntervalId) {
-            clearInterval(metronomeIntervalId);
+        if (metronomeIntervalRef.current) {
+            clearInterval(metronomeIntervalRef.current);
+            metronomeIntervalRef.current = null;
+        }
+
+        if (!isMetronomeActive) {
             setCount(0);
+            setIntensity({ prev: 0, current: 0 });
+            return;
         }
 
-        switch (isMetronomeActive) {
-            case false:
-                setMetronomeIntervalId(null);
-                setIntensity({
-                    prev: 0,
-                    current: 0
-                })
-                break;
-
-            case true:
-                let lengthOfABeat = (60 / bpm) * 1000; // bounce, this is for quarter note
-                if (timeSignature === "6/8") {
-                    lengthOfABeat /= 2; // halve the duration for 6/8
-                }
-
-                const intervalId = setInterval(() => {
-                    const { count } = useAppStore.getState();
-                    setCount(getNewCount(count));
-                }, lengthOfABeat);
-
-                setMetronomeIntervalId(intervalId);
-                break;
+        let lengthOfABeat = (60 / bpm) * 1000;
+        if (timeSignature === "6/8") {
+            lengthOfABeat /= 2;
         }
+
+        const intervalId = setInterval(() => {
+            const { count } = useAppStore.getState();
+            setCount(getNewCount(count));
+        }, lengthOfABeat);
+
+        metronomeIntervalRef.current = intervalId;
+
+        return () => {
+            clearInterval(intervalId);
+            metronomeIntervalRef.current = null;
+        };
     }, [isMetronomeActive])
 
     const disableMeterControls = () => {
