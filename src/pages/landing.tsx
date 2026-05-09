@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/use-app-store';
 import { SocialSidebar } from '@/components/social-sidebar';
-import { Play, ArrowRight, LoaderCircle, Monitor } from 'lucide-react';
+import { Play, ArrowRight, LoaderCircle } from 'lucide-react';
 import { StudioActivationStatus } from '@/store/schema';
 import { deserializeLooperState } from '@/utils/looper-file-util';
 
@@ -282,23 +282,6 @@ const Landing: React.FC = () => {
 
 
       </motion.div>
-
-    {isMobile && (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-black/80 backdrop-blur-xl border border-white/15 shadow-2xl w-[calc(100%-3rem)]"
-      >
-        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-amber-500/15 shrink-0">
-          <Monitor className="w-4 h-4 text-amber-400" />
-        </div>
-        <p className="text-xs text-slate-300 leading-relaxed">
-          <span className="font-semibold text-white">Open on desktop</span> — Studio is designed for larger screens and may not be suitable for mobile.
-        </p>
-      </motion.div>
-    )}
-
     </div>
   );
 };
