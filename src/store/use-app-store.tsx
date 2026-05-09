@@ -3,7 +3,7 @@ import { StudioActivationStatus, type AppState, type Loop, type LooperState, typ
 
 export const useAppStore = create<AppState>((set) => ({
     // general
-    activateStudio: StudioActivationStatus.LOADING,
+    activateStudio: StudioActivationStatus.ACTIVE,
     amps: [],
     intensity: { prev: 0, current: 0 },
     setActivateStudio: (activateStudio: StudioActivationStatus) => set({ activateStudio }),
