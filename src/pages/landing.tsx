@@ -294,7 +294,7 @@ const Landing: React.FC = () => {
           <Monitor className="w-4 h-4 text-amber-400" />
         </div>
         <p className="text-xs text-slate-300 leading-relaxed">
-          <span className="font-semibold text-white">Open on desktop</span> — Studio is designed for larger screens and may lag on mobile.
+          <span className="font-semibold text-white">Open on desktop</span> — Studio is designed for larger screens and may not be suitable for mobile.
         </p>
       </motion.div>
     )}
