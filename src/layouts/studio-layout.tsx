@@ -328,6 +328,7 @@ export const StudioLayout = () => {
         return () => {
             if (animationFrameRef.current) {
                 cancelAnimationFrame(animationFrameRef.current);
+                animationFrameRef.current = null;
             }
         };
     }, [studioMode]);
@@ -360,6 +361,13 @@ export const StudioLayout = () => {
                 sourceRef.current = source;
 
                 source.connect(analyser);
+
+                // On remount with already-granted permission the studioMode effect
+                // fires before analyserRef is ready and tick() returns early.
+                // Start the loop here once the analyser is wired up.
+                if (!animationFrameRef.current) {
+                    tick();
+                }
             } catch (err) {
                 console.error('Mic init failed', err);
             }
@@ -372,6 +380,7 @@ export const StudioLayout = () => {
 
             if (animationFrameRef.current) {
                 cancelAnimationFrame(animationFrameRef.current);
+                animationFrameRef.current = null;
             }
             analyserRef.current?.disconnect();
             sourceRef.current?.disconnect();
