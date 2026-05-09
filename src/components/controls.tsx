@@ -2,8 +2,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { TIME_SIGNATURES } from "@/store/schema";
 import { useAppStore } from "@/store/use-app-store";
 import { useEffect, useRef, useState } from "react";
-import { Play, Settings, Square, Circle, MicOff, Mic, Trash, Save, FolderOpen } from "lucide-react";
+import { Play, Settings, Square, Circle, MicOff, Mic, Trash, Save, FolderOpen, Headphones, LoaderCircle } from "lucide-react";
 import { serializeLooperState, deserializeLooperState } from "@/utils/looper-file-util";
+import { exportLoopsToMp3 } from "@/utils/export-mp3-util";
 
 export function MetronomeControls() {
     const {
@@ -29,6 +30,11 @@ export function MetronomeControls() {
     const [metronomeIntervalId, setMetronomeIntervalId] = useState<NodeJS.Timeout | null>(null);
     const [saveModalOpen, setSaveModalOpen] = useState(false);
     const [saveName, setSaveName] = useState("");
+    const [exportMp3ModalOpen, setExportMp3ModalOpen] = useState(false);
+    const [exportMp3Name, setExportMp3Name] = useState("");
+    const [exportMp3Bars, setExportMp3Bars] = useState(8);
+    const [isExportingMp3, setIsExportingMp3] = useState(false);
+    const [exportMp3Progress, setExportMp3Progress] = useState(0);
 
     const barsDivReference = useRef<HTMLDivElement | null>(null);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -38,6 +44,29 @@ export function MetronomeControls() {
         setSaveName("");
         setSaveModalOpen(true);
         setTimeout(() => saveInputRef.current?.focus(), 50);
+    };
+
+    const handleExportMp3 = () => {
+        setExportMp3Name("");
+        setExportMp3Bars(8);
+        setExportMp3Progress(0);
+        setExportMp3ModalOpen(true);
+    };
+
+    const commitExportMp3 = async () => {
+        const filename = exportMp3Name.trim() || "my-session";
+        setIsExportingMp3(true);
+        setExportMp3Progress(0);
+        await exportLoopsToMp3({
+            loops,
+            bpm,
+            timeSignature,
+            exportBars: exportMp3Bars,
+            filename,
+            onProgress: setExportMp3Progress,
+        });
+        setIsExportingMp3(false);
+        setExportMp3ModalOpen(false);
     };
 
     const commitSave = () => {
@@ -278,6 +307,102 @@ export function MetronomeControls() {
                 )}
             </AnimatePresence>
 
+            <AnimatePresence>
+                {exportMp3ModalOpen && (
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => { if (!isExportingMp3) setExportMp3ModalOpen(false); }}
+                            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-80"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.92, y: 16 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.92, y: 16 }}
+                            transition={{ type: "spring", damping: 22, stiffness: 260 }}
+                            className="fixed inset-0 z-90 flex items-center justify-center pointer-events-none"
+                        >
+                            <div
+                                onClick={(e) => e.stopPropagation()}
+                                className="pointer-events-auto w-80 rounded-2xl bg-black/70 backdrop-blur-2xl border border-white/15 shadow-[0_0_40px_rgba(99,102,241,0.2)] p-7 flex flex-col gap-5"
+                            >
+                                <div className="flex flex-col gap-1">
+                                    <p className="text-white/40 text-xs uppercase tracking-widest">export</p>
+                                    <h2 className="text-white text-xl font-bold tracking-tight">Export as MP3</h2>
+                                    <p className="text-white/50 text-xs mt-0.5">Audio-only export, 128 kbps.</p>
+                                </div>
+
+                                <div className="flex items-center rounded-xl bg-white/5 border border-white/10 px-3 overflow-hidden focus-within:border-white/30 transition-colors">
+                                    <input
+                                        type="text"
+                                        value={exportMp3Name}
+                                        onChange={(e) => setExportMp3Name(e.target.value)}
+                                        onKeyDown={(e) => { if (e.key === "Enter" && !isExportingMp3) commitExportMp3(); if (e.key === "Escape" && !isExportingMp3) setExportMp3ModalOpen(false); }}
+                                        placeholder="my-session"
+                                        disabled={isExportingMp3}
+                                        className="flex-1 bg-transparent text-white text-sm py-3 outline-none placeholder:text-white/20 disabled:opacity-50"
+                                    />
+                                    <span className="text-white/30 text-xs shrink-0">.mp3</span>
+                                </div>
+
+                                <div className="flex flex-col gap-2">
+                                    <span className="text-white/40 text-xs uppercase tracking-widest">Bars to export</span>
+                                    <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/5 border border-white/10">
+                                        <button
+                                            onClick={() => setExportMp3Bars(Math.max(1, exportMp3Bars - 1))}
+                                            disabled={isExportingMp3}
+                                            className="text-white w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed text-lg"
+                                        >-</button>
+                                        <span className="flex-1 text-center text-white text-sm font-semibold">{exportMp3Bars} bars</span>
+                                        <button
+                                            onClick={() => setExportMp3Bars(Math.min(64, exportMp3Bars + 1))}
+                                            disabled={isExportingMp3}
+                                            className="text-white w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed text-lg"
+                                        >+</button>
+                                    </div>
+                                </div>
+
+                                {isExportingMp3 && (
+                                    <div className="flex flex-col gap-2">
+                                        <div className="flex justify-between text-xs text-white/40">
+                                            <span>Exporting...</span>
+                                            <span>{Math.round(exportMp3Progress * 100)}%</span>
+                                        </div>
+                                        <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+                                            <motion.div
+                                                className="h-full rounded-full bg-indigo-400"
+                                                animate={{ width: `${exportMp3Progress * 100}%` }}
+                                                transition={{ ease: "linear" }}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => setExportMp3ModalOpen(false)}
+                                        disabled={isExportingMp3}
+                                        className="flex-1 py-2.5 rounded-xl text-sm text-white/50 border border-white/10 hover:bg-white/5 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                                    >
+                                        cancel
+                                    </button>
+                                    <button
+                                        onClick={commitExportMp3}
+                                        disabled={isExportingMp3}
+                                        className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-black bg-white hover:bg-white/90 transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    >
+                                        {isExportingMp3 ? <LoaderCircle className="w-4 h-4 animate-spin text-black" /> : <Headphones className="w-4 h-4" />}
+                                        {isExportingMp3 ? "exporting..." : "export"}
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
+
             {(studioMode === "metronome") && (
                 <div className="hidden lg:block absolute bottom-20 left-1/2 -translate-x-1/2 z-50 text-sm font-medium text-white/80">
                     Press <span className="px-2 py-1 rounded bg-white/10">Space</span> to toggle {studioMode}
@@ -416,6 +541,14 @@ export function MetronomeControls() {
                                         className={`p-1.5 rounded-md text-white/60 hover:text-white hover:bg-white/10 transition ${disableLoopControls() || loops.length === 0 ? "opacity-40 cursor-not-allowed" : ""}`}
                                     >
                                         <Save className="h-3.5 w-3.5" />
+                                    </button>
+                                    <button
+                                        onClick={handleExportMp3}
+                                        disabled={disableLoopControls() || loops.length === 0}
+                                        title="Export as MP3"
+                                        className={`p-1.5 rounded-md text-white/60 hover:text-white hover:bg-white/10 transition ${disableLoopControls() || loops.length === 0 ? "opacity-40 cursor-not-allowed" : ""}`}
+                                    >
+                                        <Headphones className="h-3.5 w-3.5" />
                                     </button>
                                 </div>
                             </div>
@@ -595,6 +728,14 @@ export function MetronomeControls() {
                                                 className={`p-1.5 rounded-md text-white/60 hover:text-white hover:bg-white/10 transition ${disableLoopControls() || loops.length === 0 ? "opacity-40 cursor-not-allowed" : ""}`}
                                             >
                                                 <Save className="h-4 w-4" />
+                                            </button>
+                                            <button
+                                                onClick={handleExportMp3}
+                                                disabled={disableLoopControls() || loops.length === 0}
+                                                title="Export as MP3"
+                                                className={`p-1.5 rounded-md text-white/60 hover:text-white hover:bg-white/10 transition ${disableLoopControls() || loops.length === 0 ? "opacity-40 cursor-not-allowed" : ""}`}
+                                            >
+                                                <Headphones className="h-4 w-4" />
                                             </button>
                                         </div>
                                     </div>

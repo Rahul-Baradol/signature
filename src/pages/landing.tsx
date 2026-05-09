@@ -37,7 +37,7 @@ const Landing: React.FC = () => {
   return (
     <div className="relative min-h-screen w-screen bg-[#030712] text-slate-50 flex items-center overflow-hidden selection:bg-sky-500/30 font-sans">
       <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f2937_1px,transparent_1px),linear-gradient(to_bottom,#1f2937_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-[0.15]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f2937_1px,transparent_1px),linear-gradient(to_bottom,#1f2937_1px,transparent_1px)] bg-size-[4rem_4rem] mask-[radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-[0.15]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(14,165,233,0.08),transparent_50%)]" />
       </div>
 
@@ -59,8 +59,8 @@ const Landing: React.FC = () => {
           </motion.span>
 
           <h1 className="text-7xl md:text-9xl font-black tracking-tight mb-8 leading-[0.85]">
-            Time <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-t from-slate-500 to-white">
+            {/* Time <br /> */}
+            <span className="text-transparent bg-clip-text bg-linear-to-t from-slate-500 to-white">
               Signature
             </span>
           </h1>
@@ -89,9 +89,9 @@ const Landing: React.FC = () => {
                   <motion.div
                     whileHover={{ scale: 1.05, backgroundColor: '#38bdf8' }}
                     whileTap={{ scale: 0.95 }}
-                    className="relative z-10 px-10 py-5 bg-white text-black font-bold text-[11px] tracking-widest uppercase rounded-full transition-all duration-300 group-hover:shadow-[0_0_30px_rgba(56,189,248,0.4)]"
+                    className="uppercase relative z-10 px-10 py-5 bg-white text-black font-bold text-[11px] tracking-widest rounded-full transition-all duration-300 group-hover:shadow-[0_0_30px_rgba(56,189,248,0.4)]"
                   >
-                    Upload MP3
+                    Upload Signature
                   </motion.div>
                 </label>
               </div>
@@ -101,7 +101,7 @@ const Landing: React.FC = () => {
                   <motion.div
                     whileHover={activateStudio ? { scale: 1.05, backgroundColor: '#38bdf8' } : {}}
                     whileTap={activateStudio ? { scale: 0.95 } : {}}
-                    className={`flex flex-row items-center gap-2 relative z-10 px-10 py-5 bg-white text-black font-bold text-[11px] tracking-widest uppercase rounded-full transition-all duration-300 group-hover:shadow-[0_0_30px_rgba(56,189,248,0.4)] cursor-pointer ${(activateStudio !== StudioActivationStatus.ACTIVE) ? 'opacity-50 cursor-not-allowed' : ''
+                    className={`uppercase flex flex-row items-center gap-2 relative z-10 px-10 py-5 bg-white text-black font-bold text-[11px] tracking-widest rounded-full transition-all duration-300 group-hover:shadow-[0_0_30px_rgba(56,189,248,0.4)] cursor-pointer ${(activateStudio !== StudioActivationStatus.ACTIVE) ? 'opacity-50 cursor-not-allowed' : ''
                       }`}
                     onClick={() => {
                       if (activateStudio == StudioActivationStatus.ACTIVE) {
@@ -109,7 +109,7 @@ const Landing: React.FC = () => {
                       }
                     }}
                   >
-                    <span>Go to studio</span>
+                    <span>Create Signature</span>
                     {activateStudio === StudioActivationStatus.LOADING ? <LoaderCircle className='animate-spin' /> : null}
                   </motion.div>
 
@@ -173,7 +173,7 @@ const Landing: React.FC = () => {
             {videoDownloading ? (
               <div className="w-full h-full inset-0 z-10 overflow-hidden">
                 <div className="absolute inset-0 bg-[#030712]" />
-                <div className="absolute inset-0 animate-sweep bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                <div className="absolute inset-0 animate-sweep bg-linear-to-r from-transparent via-white/20 to-transparent" />
               </div>
             ) : <></>}
 
@@ -187,7 +187,7 @@ const Landing: React.FC = () => {
             >
               <source src="/signature-3.mp4" type="video/mp4" />
             </video>
-            <div className="absolute inset-0 bg-gradient-to-r from-[#030712] via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-linear-to-r from-[#030712] via-transparent to-transparent" />
           </div>
         </div>
 
