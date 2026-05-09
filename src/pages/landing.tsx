@@ -105,11 +105,11 @@ const Landing: React.FC = () => {
                       }`}
                     onClick={() => {
                       if (activateStudio == StudioActivationStatus.ACTIVE) {
-                        navigate('/studio')
+                        navigate('/studio/looper')
                       }
                     }}
                   >
-                    <span>Create Signature</span>
+                    <span>Go to studio</span>
                     {activateStudio === StudioActivationStatus.LOADING ? <LoaderCircle className='animate-spin' /> : null}
                   </motion.div>
 
