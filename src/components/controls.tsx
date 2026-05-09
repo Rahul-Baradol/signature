@@ -84,6 +84,13 @@ export function MetronomeControls() {
         setLoops(updatedLoops);
     }
 
+    const updateLoopName = (index: number, newName: string) => {
+        const updatedLoops = loops.map((loop, i) =>
+            i === index ? { ...loop, name: newName } : loop
+        );
+        setLoops(updatedLoops);
+    }
+
     useEffect(() => {
         if (barsDivReference.current) {
             barsDivReference.current.scrollTop = 0;
@@ -451,9 +458,12 @@ export function MetronomeControls() {
                                             <Trash className="h-4 w-4" />
                                         </button>
 
-                                        <p className="text-sm font-medium text-white/90 truncate">
-                                            {loop.name}
-                                        </p>
+                                        <input
+                                            value={loop.name}
+                                            onChange={(e) => updateLoopName(index, e.target.value)}
+                                            disabled={disableLoopControls()}
+                                            className="text-sm font-medium text-white/90 truncate bg-transparent border-none outline-none focus:bg-white/10 focus:rounded px-1 w-full min-w-0"
+                                        />
                                     </div>
 
                                     <button
@@ -627,9 +637,12 @@ export function MetronomeControls() {
                                                     <Trash className="h-4 w-4" />
                                                 </button>
 
-                                                <p className="text-sm font-medium text-white/90 truncate">
-                                                    {loop.name}
-                                                </p>
+                                                <input
+                                                    value={loop.name}
+                                                    onChange={(e) => updateLoopName(index, e.target.value)}
+                                                    disabled={disableLoopControls()}
+                                                    className="text-sm font-medium text-white/90 truncate bg-transparent border-none outline-none focus:bg-white/10 focus:rounded px-1 w-full min-w-0"
+                                                />
                                             </div>
 
                                             <button
