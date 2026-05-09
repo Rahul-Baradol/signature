@@ -156,13 +156,16 @@ const Landing: React.FC = () => {
                     {activateStudio === StudioActivationStatus.LOADING ? <LoaderCircle className='animate-spin' /> : null}
                   </motion.div>
 
-                  {
-                    (activateStudio === StudioActivationStatus.INACTIVE) && (
-                      <div className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-black px-3 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
-                        Not supported on this hardware
-                      </div>
-                    )
-                  }
+                  {activateStudio === StudioActivationStatus.INACTIVE && (
+                    <div className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-black px-3 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
+                      Not supported on this hardware
+                    </div>
+                  )}
+                  {activateStudio === StudioActivationStatus.ACTIVE && (
+                    <div className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-black px-3 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
+                      create your own signature
+                    </div>
+                  )}
                 </div>
 
               </div>
@@ -212,7 +215,7 @@ const Landing: React.FC = () => {
               <div className="relative group w-fit">
                 <motion.button
                   initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  animate={{ opacity: (activateStudio === StudioActivationStatus.ACTIVE ? 1 : 0.4), y: 0 }}
                   transition={{ delay: 0.9 }}
                   onClick={handleDemoLooper}
                   disabled={activateStudio !== StudioActivationStatus.ACTIVE || loadingDemo}
