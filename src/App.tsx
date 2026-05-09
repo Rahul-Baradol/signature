@@ -1,13 +1,13 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Landing from '@/pages/landing';
-import GradientDesign from '@/pages/gradient';
-import ConcetricRingsDesign from '@/pages/concentric-rings';
+import { lazy, Suspense, useEffect, useRef } from 'react';
 import { AnimationLayout } from '@/layouts/animation-layout';
 import { StudioLayout } from './layouts/studio-layout';
-import OpenmicStudio from './pages/studio/openmic';
-import Metronome from './pages/studio/metronome';
-import Looper from './pages/studio/looper';
-import { useEffect, useRef } from 'react';
+
+const Landing = lazy(() => import('@/pages/landing'));
+const GradientDesign = lazy(() => import('@/pages/gradient'));
+const OpenmicStudio = lazy(() => import('./pages/studio/openmic'));
+const Metronome = lazy(() => import('./pages/studio/metronome'));
+const Looper = lazy(() => import('./pages/studio/looper'));
 import { useAppStore } from './store/use-app-store';
 import { StudioActivationStatus } from './store/schema';
 
@@ -56,20 +56,21 @@ function App() {
 
     return (
         <Router>
-            <Routes>
-                <Route path="/" element={<Landing />} />
+            <Suspense>
+                <Routes>
+                    <Route path="/" element={<Landing />} />
 
-                <Route path="/signature" element={<AnimationLayout />}>
-                    <Route path="gradient" element={<GradientDesign />} />
-                    <Route path="concentric-rings" element={<ConcetricRingsDesign />} />
-                </Route>
+                    <Route path="/signature" element={<AnimationLayout />}>
+                        <Route path="gradient" element={<GradientDesign />} />
+                    </Route>
 
-                <Route path="/studio" element={<StudioLayout />}>
-                    <Route index element={<OpenmicStudio />} />
-                    <Route path="metronome" element={<Metronome />} />
-                    <Route path="looper" element={<Looper />} />
-                </Route>
-            </Routes>
+                    <Route path="/studio" element={<StudioLayout />}>
+                        <Route index element={<OpenmicStudio />} />
+                        <Route path="metronome" element={<Metronome />} />
+                        <Route path="looper" element={<Looper />} />
+                    </Route>
+                </Routes>
+            </Suspense>
         </Router>
     );
 }
