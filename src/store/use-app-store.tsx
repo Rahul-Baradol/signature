@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { StudioActivationStatus, type AppState, type Bar, type LooperState, type MicrophonePermissionStatus, type StudioMode, type TimeSignature } from "./schema";
+import { StudioActivationStatus, type AppState, type Loop, type LooperState, type MicrophonePermissionStatus, type StudioMode, type TimeSignature } from "./schema";
 
 export const useAppStore = create<AppState>((set) => ({
     // general
@@ -42,13 +42,13 @@ export const useAppStore = create<AppState>((set) => ({
     setIsMetronomeActive: (isMetronomeActive: boolean) => set({ isMetronomeActive }),
 
     // looper states
-    bars: [],
+    loops: [],
     looperState: "idle",
     loopBarCount: 1,
 
-    setBars: (bars: Bar[]) => set({ bars }),
-    addBar: (bar: Bar) => set((state) => ({ bars: [bar, ...state.bars] })),
-    removeBar: (bar: Bar) => set((state) => ({ bars: state.bars.filter((b) => b !== bar) })),
+    setLoops: (loops: Loop[]) => set({ loops }),
+    addLoop: (loop: Loop) => set((state) => ({ loops: [loop, ...state.loops] })),
+    removeLoop: (index: number) => set((state) => ({ loops: state.loops.filter((_, i) => i !== index) })),
     setLooperState: (looperState: LooperState) => set({ looperState }),
     setLoopBarCount: (loopBarCount: number) => set({ loopBarCount }),
 }));

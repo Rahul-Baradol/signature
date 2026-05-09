@@ -19,7 +19,7 @@ export const TIME_SIGNATURES = ["4/4", "3/4", "2/4", "6/8"] as const;
 
 export type TimeSignature = typeof TIME_SIGNATURES[number];
 
-export interface Bar {
+export interface Loop {
     timesignature: TimeSignature;
     bpm: number;
     barCount: number;
@@ -69,13 +69,13 @@ export type AppState = {
     setIsMetronomeActive: (isMetronomeActive: boolean) => void;
 
     // looper states
-    bars: Bar[];
+    loops: Loop[];
     looperState: LooperState;
     loopBarCount: number;
 
-    addBar: (bar: Bar) => void;
-    removeBar: (bar: Bar) => void;
-    setBars: (bars: Bar[]) => void;
+    addLoop: (loop: Loop) => void;
+    removeLoop: (index: number) => void;
+    setLoops: (loops: Loop[]) => void;
     setLooperState: (looperState: LooperState) => void;
     setLoopBarCount: (loopBarCount: number) => void;
 };

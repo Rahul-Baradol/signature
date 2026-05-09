@@ -2,7 +2,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { TIME_SIGNATURES } from "@/store/schema";
 import { useAppStore } from "@/store/use-app-store";
 import { useEffect, useRef, useState } from "react";
-import { Play, Settings, Square, Circle, MicOff, Mic, Trash } from "lucide-react";
+import { Play, Settings, Square, Circle, MicOff, Mic, Trash, Save, FolderOpen } from "lucide-react";
+import { serializeLooperState, deserializeLooperState } from "@/utils/looper-file-util";
 
 export function MetronomeControls() {
     const {
@@ -11,9 +12,10 @@ export function MetronomeControls() {
         isMetronomeActive,
         bpm,
         timeSignature,
-        bars,
+        loops,
         loopBarCount,
-        setBars,
+        removeLoop,
+        setLoops,
         setBpm,
         setLooperState,
         setTimeSignature,
@@ -25,29 +27,68 @@ export function MetronomeControls() {
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [metronomeIntervalId, setMetronomeIntervalId] = useState<NodeJS.Timeout | null>(null);
+    const [saveModalOpen, setSaveModalOpen] = useState(false);
+    const [saveName, setSaveName] = useState("");
 
     const barsDivReference = useRef<HTMLDivElement | null>(null);
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
+    const saveInputRef = useRef<HTMLInputElement | null>(null);
 
-    const toggleMuteBar = async (index: number) => {
-        const updatedBars = bars.map((bar, i) => {
-            if (i === index) {
-                return { ...bar, muted: !bar.muted };
+    const handleSave = () => {
+        setSaveName("");
+        setSaveModalOpen(true);
+        setTimeout(() => saveInputRef.current?.focus(), 50);
+    };
+
+    const commitSave = () => {
+        const filename = saveName.trim() || "my-session";
+        const json = serializeLooperState(loops, bpm, timeSignature, loopBarCount);
+        const blob = new Blob([json], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${filename}.signature`;
+        a.click();
+        URL.revokeObjectURL(url);
+        setSaveModalOpen(false);
+    };
+
+    const handleLoad = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        e.target.value = "";
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const json = event.target?.result as string;
+                const state = deserializeLooperState(json);
+                setLoops(state.loops);
+                setBpm(state.bpm);
+                setTimeSignature(state.timeSignature);
+                setLoopBarCount(state.loopBarCount);
+            } catch {
+                alert("Failed to load file — it may be corrupted or not a valid .signature file.");
             }
-            return bar;
-        });
-        setBars(updatedBars);
-    }
+        };
+        reader.readAsText(file);
+    };
 
-    const deleteBar = async (index: number) => {
-        const updatedBars = bars.filter((_, i) => i !== index);
-        setBars(updatedBars);
+    const toggleMuteLoop = async (index: number) => {
+        const updatedLoops = loops.map((loop, i) => {
+            if (i === index) {
+                return { ...loop, muted: !loop.muted };
+            }
+            return loop;
+        });
+        setLoops(updatedLoops);
     }
 
     useEffect(() => {
         if (barsDivReference.current) {
             barsDivReference.current.scrollTop = 0;
         }
-    }, [bars])
+    }, [loops])
 
     useEffect(() => {
         const onKeyDown = (e: KeyboardEvent) => {
@@ -112,7 +153,7 @@ export function MetronomeControls() {
     const disableMeterControls = () => {
         let shouldBeDisabled = isMetronomeActive;
         if (studioMode === "looper") {
-            shouldBeDisabled = shouldBeDisabled || (bars.length > 0 || looperState !== "idle");
+            shouldBeDisabled = shouldBeDisabled || (loops.length > 0 || looperState !== "idle");
         }
         return shouldBeDisabled;
     };
@@ -170,6 +211,66 @@ export function MetronomeControls() {
 
     return (
         <>
+            <AnimatePresence>
+                {saveModalOpen && (
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setSaveModalOpen(false)}
+                            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-80"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.92, y: 16 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.92, y: 16 }}
+                            transition={{ type: "spring", damping: 22, stiffness: 260 }}
+                            className="fixed inset-0 z-90 flex items-center justify-center pointer-events-none"
+                        >
+                            <div
+                                onClick={(e) => e.stopPropagation()}
+                                className="pointer-events-auto w-80 rounded-2xl bg-black/70 backdrop-blur-2xl border border-white/15 shadow-[0_0_40px_rgba(99,102,241,0.2)] p-7 flex flex-col gap-5"
+                            >
+                                <div className="flex flex-col gap-1">
+                                    <p className="text-white/40 text-xs uppercase tracking-widest">drop it</p>
+                                    <h2 className="text-white text-xl font-bold tracking-tight">Name this session</h2>
+                                    <p className="text-white/50 text-xs mt-0.5">Your loops deserve a good name.</p>
+                                </div>
+
+                                <div className="flex items-center rounded-xl bg-white/5 border border-white/10 px-3 overflow-hidden focus-within:border-white/30 transition-colors">
+                                    <input
+                                        ref={saveInputRef}
+                                        type="text"
+                                        value={saveName}
+                                        onChange={(e) => setSaveName(e.target.value)}
+                                        onKeyDown={(e) => { if (e.key === "Enter") commitSave(); if (e.key === "Escape") setSaveModalOpen(false); }}
+                                        placeholder="late-night-banger"
+                                        className="flex-1 bg-transparent text-white text-sm py-3 outline-none placeholder:text-white/20"
+                                    />
+                                    <span className="text-white/30 text-xs shrink-0">.signature</span>
+                                </div>
+
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => setSaveModalOpen(false)}
+                                        className="flex-1 py-2.5 rounded-xl text-sm text-white/50 border border-white/10 hover:bg-white/5 transition"
+                                    >
+                                        cancel
+                                    </button>
+                                    <button
+                                        onClick={commitSave}
+                                        className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-black bg-white hover:bg-white/90 transition"
+                                    >
+                                        save it
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
+
             {(studioMode === "metronome") && (
                 <div className="hidden lg:block absolute bottom-20 left-1/2 -translate-x-1/2 z-50 text-sm font-medium text-white/80">
                     Press <span className="px-2 py-1 rounded bg-white/10">Space</span> to toggle {studioMode}
@@ -283,8 +384,36 @@ export function MetronomeControls() {
                             overflow-y-auto
                             "
                         >
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept=".signature"
+                                className="hidden"
+                                onChange={handleLoad}
+                            />
+                            <div className="flex items-center justify-between">
+                                <span className="text-white/40 text-xs uppercase">Loops</span>
+                                <div className="flex gap-1">
+                                    <button
+                                        onClick={() => fileInputRef.current?.click()}
+                                        disabled={disableLoopControls()}
+                                        title="Load session"
+                                        className={`p-1.5 rounded-md text-white/60 hover:text-white hover:bg-white/10 transition ${disableLoopControls() ? "opacity-40 cursor-not-allowed" : ""}`}
+                                    >
+                                        <FolderOpen className="h-3.5 w-3.5" />
+                                    </button>
+                                    <button
+                                        onClick={handleSave}
+                                        disabled={disableLoopControls() || loops.length === 0}
+                                        title="Save session"
+                                        className={`p-1.5 rounded-md text-white/60 hover:text-white hover:bg-white/10 transition ${disableLoopControls() || loops.length === 0 ? "opacity-40 cursor-not-allowed" : ""}`}
+                                    >
+                                        <Save className="h-3.5 w-3.5" />
+                                    </button>
+                                </div>
+                            </div>
                             {
-                                (bars.length === 0) ? (
+                                (loops.length === 0) ? (
                                     <motion.div
                                         className="w-full h-full flex items-center justify-center text-center text-sm font-semibold italic"
                                     >
@@ -292,7 +421,7 @@ export function MetronomeControls() {
                                     </motion.div>
                                 ) : null
                             }
-                            {bars.map((bar, index) => (
+                            {loops.map((loop, index) => (
                                 <motion.div
                                     key={index}
                                     layout
@@ -309,7 +438,7 @@ export function MetronomeControls() {
                                 >
                                     <div className="flex flex-row items-center gap-1">
                                         <button
-                                            onClick={() => deleteBar(index)}
+                                            onClick={() => removeLoop(index)}
                                             disabled={disableLoopControls()}
                                             className={`p-1.5 rounded-md
                                                     text-white/60
@@ -323,12 +452,12 @@ export function MetronomeControls() {
                                         </button>
 
                                         <p className="text-sm font-medium text-white/90 truncate">
-                                            {bar.name}
+                                            {loop.name}
                                         </p>
                                     </div>
 
                                     <button
-                                        onClick={() => toggleMuteBar(index)}
+                                        onClick={() => toggleMuteLoop(index)}
                                         disabled={disableLoopControls()}
                                         className={`p-1.5 rounded-md
                                             text-white/60
@@ -338,7 +467,7 @@ export function MetronomeControls() {
                                             ${disableLoopControls() ? "opacity-40 cursor-not-allowed" : "opacity-100"}                        
                                         `}
                                     >
-                                        {bar.muted ? (
+                                        {loop.muted ? (
                                             <MicOff className="h-4 w-4" />
                                         ) : (
                                             <Mic className="h-4 w-4" />
@@ -438,9 +567,29 @@ export function MetronomeControls() {
                             }
                             {
                                 studioMode === "looper" ? <div className="flex flex-col gap-4 h-full">
-                                    <span className="text-white/40 text-xs uppercase">Loops</span>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-white/40 text-xs uppercase">Loops</span>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => fileInputRef.current?.click()}
+                                                disabled={disableLoopControls()}
+                                                title="Load session"
+                                                className={`p-1.5 rounded-md text-white/60 hover:text-white hover:bg-white/10 transition ${disableLoopControls() ? "opacity-40 cursor-not-allowed" : ""}`}
+                                            >
+                                                <FolderOpen className="h-4 w-4" />
+                                            </button>
+                                            <button
+                                                onClick={handleSave}
+                                                disabled={disableLoopControls() || loops.length === 0}
+                                                title="Save session"
+                                                className={`p-1.5 rounded-md text-white/60 hover:text-white hover:bg-white/10 transition ${disableLoopControls() || loops.length === 0 ? "opacity-40 cursor-not-allowed" : ""}`}
+                                            >
+                                                <Save className="h-4 w-4" />
+                                            </button>
+                                        </div>
+                                    </div>
                                     {
-                                        bars.length === 0 ? (
+                                        loops.length === 0 ? (
                                             <motion.div
                                                 className="w-full h-full flex text-sm font-semibold italic"
                                             >
@@ -448,7 +597,7 @@ export function MetronomeControls() {
                                             </motion.div>
                                         ) : null
                                     }
-                                    {bars.map((bar, index) => (
+                                    {loops.map((loop, index) => (
                                         <motion.div
                                             key={index}
                                             layout
@@ -465,7 +614,7 @@ export function MetronomeControls() {
                                         >
                                             <div className="flex flex-row items-center gap-1">
                                                 <button
-                                                    onClick={() => deleteBar(index)}
+                                                    onClick={() => removeLoop(index)}
                                                     disabled={disableLoopControls()}
                                                     className={`p-1.5 rounded-md
                                                     text-white/60
@@ -479,12 +628,12 @@ export function MetronomeControls() {
                                                 </button>
 
                                                 <p className="text-sm font-medium text-white/90 truncate">
-                                                    {bar.name}
+                                                    {loop.name}
                                                 </p>
                                             </div>
 
                                             <button
-                                                onClick={() => toggleMuteBar(index)}
+                                                onClick={() => toggleMuteLoop(index)}
                                                 disabled={disableLoopControls()}
                                                 className={`p-1.5 rounded-md
                                             text-white/60
@@ -494,7 +643,7 @@ export function MetronomeControls() {
                                             ${disableLoopControls() ? "opacity-40 cursor-not-allowed" : "opacity-100"}                        
                                         `}
                                             >
-                                                {bar.muted ? (
+                                                {loop.muted ? (
                                                     <MicOff className="h-4 w-4" />
                                                 ) : (
                                                     <Mic className="h-4 w-4" />

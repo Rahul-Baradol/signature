@@ -8,10 +8,10 @@ import { calculateAmpsForPerformanceMode, PerformanceMode } from '@/utils/perfor
 import { calculateIntensityFrame } from '@/utils/visualizer-util';
 import { easeInOut, gaussian, step } from '@/utils/math';
 import { StudioPanel } from '@/components/studio-panel';
-import { StudioActivationStatus, type Bar } from '@/store/schema';
+import { StudioActivationStatus, type Loop } from '@/store/schema';
 
 export const StudioLayout = () => {
-    const { activateStudio, count, timeSignature, bpm, studioMode, intensity, setAmps, setBpm, setIntensity, microphonePermission, setMicrophonePermission, isMetronomeActive, looperState, bars, addBar, setLooperState, setIsMetronomeActive, setTimeSignature, loopBarCount, setLoopBarCount } = useAppStore();
+    const { activateStudio, count, timeSignature, bpm, studioMode, intensity, setAmps, setBpm, setIntensity, microphonePermission, setMicrophonePermission, isMetronomeActive, looperState, loops, addLoop, setLooperState, setIsMetronomeActive, setTimeSignature, loopBarCount, setLoopBarCount } = useAppStore();
 
     const navigate = useNavigate();
     const containerRef = useRef<HTMLDivElement>(null);
@@ -70,8 +70,8 @@ export const StudioLayout = () => {
             offset += chunk.length;
         }
 
-        const newBar: Bar = {
-            name: `Loop ${bars.length + 1}`,
+        const newLoop: Loop = {
+            name: `Loop ${loops.length + 1}`,
             timesignature: timeSignature,
             bpm: bpm,
             barCount: loopBarCount,
@@ -79,7 +79,7 @@ export const StudioLayout = () => {
             recordedBuffer: audioBuffer
         };
 
-        addBar(newBar);
+        addLoop(newLoop);
 
         recordedChunks.current = [];
         setLooperState("idle");
@@ -94,7 +94,7 @@ export const StudioLayout = () => {
         const context = audioCtxRef.current;
         const mainAnalyser = analyserRef.current;
 
-        if (!context || !mainAnalyser || bars.length === 0) {
+        if (!context || !mainAnalyser || loops.length === 0) {
             return;
         }
 
@@ -119,16 +119,16 @@ export const StudioLayout = () => {
         }
 
         const scheduleLoop = (startTime: number, loopIndex: number) => {
-            const concernedBar = bars[loopIndex];
+            const concernedLoop = loops[loopIndex];
 
-            if (!concernedBar.recordedBuffer || concernedBar.muted) {
+            if (!concernedLoop.recordedBuffer || concernedLoop.muted) {
                 return;
             }
 
             const source = context.createBufferSource();
             activeSourcesRef.current.push(source);
 
-            source.buffer = concernedBar.recordedBuffer;
+            source.buffer = concernedLoop.recordedBuffer;
             source.connect(mixer);
             source.start(startTime);
         }
@@ -136,13 +136,13 @@ export const StudioLayout = () => {
         const currentTime = context.currentTime;
 
         activeSourcesRef.current = [];
-        bars.forEach((bar: Bar, barIndex: number)=> {
-            scheduleLoop(currentTime + beatTimeInSecond, barIndex);
+        loops.forEach((loop: Loop, loopIndex: number) => {
+            scheduleLoop(currentTime + beatTimeInSecond, loopIndex);
 
-            const loopDurationInSecond = barDurationInSecond ? (barDurationInSecond * bar.barCount) : undefined;
+            const loopDurationInSecond = barDurationInSecond ? (barDurationInSecond * loop.barCount) : undefined;
             if (loopDurationInSecond && beatTimeInSecond) {
                 const intervalId = setInterval(() => {
-                    scheduleLoop(context.currentTime + beatTimeInSecond, barIndex);
+                    scheduleLoop(context.currentTime + beatTimeInSecond, loopIndex);
                 }, loopDurationInSecond * 1000);
 
                 if (loopIntervalId.current) {
@@ -319,10 +319,10 @@ export const StudioLayout = () => {
             tick();
         }
 
-        if (studioMode === "looper" && bars.length > 0) {
-            setBpm(bars[0].bpm);
-            setTimeSignature(bars[0].timesignature);
-            setLoopBarCount(bars[0].barCount);
+        if (studioMode === "looper" && loops.length > 0) {
+            setBpm(loops[0].bpm);
+            setTimeSignature(loops[0].timesignature);
+            setLoopBarCount(loops[0].barCount);
         }
 
         return () => {
