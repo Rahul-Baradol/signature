@@ -7,7 +7,7 @@ import { playKick } from "@/utils/sound-util";
 import { Particles } from "@/components/particles";
 
 export default function Metronome() {
-  const { intensity, count, timeSignature, isMetronomeActive, setStudioMode, setIntensity } = useAppStore();
+  const { intensity, count, timeSignature, isMetronomeActive, isBpmDetecting, setStudioMode, setIntensity } = useAppStore();
 
   const audioContextRef = useRef<AudioContext | null>(null);
 
@@ -38,7 +38,7 @@ export default function Metronome() {
   }, [])
 
   useEffect(() => {
-    if (isMetronomeActive) {
+    if (isMetronomeActive && !isBpmDetecting) {
       let bigHit;
       if (timeSignature === "6/8") {
         bigHit = count == 1 || count == 4;

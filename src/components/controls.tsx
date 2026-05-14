@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { TIME_SIGNATURES } from "@/store/schema";
 import { useAppStore } from "@/store/use-app-store";
 import { useEffect, useRef, useState } from "react";
-import { Play, Settings, Square, Circle, MicOff, Mic, Trash, Save, FolderOpen, Headphones, LoaderCircle } from "lucide-react";
+import { Play, Settings, Square, Circle, MicOff, Mic, Trash, Save, FolderOpen, Headphones, LoaderCircle, Zap } from "lucide-react";
 import { serializeLooperState, deserializeLooperState } from "@/utils/looper-file-util";
 import { exportLoopsToMp3 } from "@/utils/export-mp3-util";
 
@@ -24,6 +24,7 @@ export function MetronomeControls() {
         setCount,
         setIntensity,
         setLoopBarCount,
+        setIsBpmDetecting,
     } = useAppStore();
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -35,6 +36,12 @@ export function MetronomeControls() {
     const [exportMp3Bars, setExportMp3Bars] = useState(8);
     const [isExportingMp3, setIsExportingMp3] = useState(false);
     const [exportMp3Progress, setExportMp3Progress] = useState(0);
+
+    const [bpmDetectPhase, setBpmDetectPhase] = useState<"idle" | "countdown" | "recording" | "result" | "error">("idle");
+    const [bpmDetectCountdown, setBpmDetectCountdown] = useState(4);
+    const [detectedBpm, setDetectedBpm] = useState<number | null>(null);
+    const bpmDetectActive = useRef(false);
+    const bpmDetectTimerRef = useRef<NodeJS.Timeout | null>(null);
 
     const barsDivReference = useRef<HTMLDivElement | null>(null);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -213,6 +220,129 @@ export function MetronomeControls() {
         const { isMetronomeActive: isMetronomeActiveTmp } = useAppStore.getState();
         setIsMetronomeActive(!isMetronomeActiveTmp);
     }
+
+    const resetBpmDetect = () => {
+        bpmDetectActive.current = false;
+        if (bpmDetectTimerRef.current) clearInterval(bpmDetectTimerRef.current);
+        setIsMetronomeActive(false);
+        setIsBpmDetecting(false);
+        setBpmDetectPhase("idle");
+        setDetectedBpm(null);
+        setBpmDetectCountdown(4);
+    };
+
+    const applyDetectedBpm = () => {
+        if (detectedBpm !== null) setBpm(detectedBpm);
+        resetBpmDetect();
+    };
+
+    const startRecordingPhase = async () => {
+        setBpmDetectPhase("recording");
+        setBpmDetectCountdown(4);
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const audioCtx = new AudioContext();
+            const source = audioCtx.createMediaStreamSource(stream);
+            const analyser = audioCtx.createAnalyser();
+            analyser.fftSize = 1024;
+            source.connect(analyser);
+
+            const dataArray = new Float32Array(analyser.fftSize);
+            let beatCount = 0;
+            let lastBeatTime = 0;
+            const minBeatInterval = 200;
+            const startTime = performance.now();
+
+            let countdownVal = 4;
+            bpmDetectTimerRef.current = setInterval(() => {
+                countdownVal--;
+                setBpmDetectCountdown(Math.max(0, countdownVal));
+                if (countdownVal <= 0 && bpmDetectTimerRef.current) {
+                    clearInterval(bpmDetectTimerRef.current);
+                }
+            }, 1000);
+
+            let threshold = 0.05;
+            let calibrationDone = false;
+            const calibrationSamples: number[] = [];
+
+            const stopAndAnalyze = () => {
+                stream.getTracks().forEach(t => t.stop());
+                audioCtx.close();
+                if (bpmDetectTimerRef.current) {
+                    clearInterval(bpmDetectTimerRef.current);
+                }
+                const bpm = Math.round((beatCount / 4) * 60);
+                setDetectedBpm(Math.max(40, Math.min(240, bpm)));
+                setBpmDetectPhase("result");
+            };
+
+            const detect = () => {
+                if (!bpmDetectActive.current) {
+                    stream.getTracks().forEach(t => t.stop());
+                    audioCtx.close();
+                    return;
+                }
+
+                const now = performance.now();
+                const elapsed = now - startTime;
+
+                analyser.getFloatTimeDomainData(dataArray);
+                let rms = 0;
+                for (let i = 0; i < dataArray.length; i++) {
+                    rms += dataArray[i] * dataArray[i];
+                }
+                rms = Math.sqrt(rms / dataArray.length);
+
+                if (elapsed < 500) {
+                    calibrationSamples.push(rms);
+                } else if (!calibrationDone) {
+                    const avg = calibrationSamples.reduce((a, b) => a + b, 0) / Math.max(calibrationSamples.length, 1);
+                    threshold = Math.max(avg * 2.5, 0.03);
+                    calibrationDone = true;
+                }
+
+                if (calibrationDone && rms > threshold && now - lastBeatTime > minBeatInterval) {
+                    beatCount++;
+                    lastBeatTime = now;
+                }
+
+                if (elapsed < 4000) {
+                    requestAnimationFrame(detect);
+                } else {
+                    stopAndAnalyze();
+                }
+            };
+
+            requestAnimationFrame(detect);
+        } catch {
+            setBpmDetectPhase("error");
+        }
+    };
+
+    const startBpmDetect = () => {
+        if (bpmDetectTimerRef.current) {
+            clearInterval(bpmDetectTimerRef.current);
+        }
+        bpmDetectActive.current = true;
+        setIsBpmDetecting(true);
+        setDetectedBpm(null);
+        setBpmDetectPhase("countdown");
+        setBpmDetectCountdown(4);
+
+        let count = 4;
+        bpmDetectTimerRef.current = setInterval(() => {
+            count--;
+            setBpmDetectCountdown(count);
+            if (count === 0) {
+                if (bpmDetectTimerRef.current) {
+                    clearInterval(bpmDetectTimerRef.current);
+                }
+                startRecordingPhase();
+            }
+        }, 1000);
+    };
 
     const handleSetBpm = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.value.length > 3) {
@@ -402,6 +532,120 @@ export function MetronomeControls() {
                 )}
             </AnimatePresence>
 
+            <AnimatePresence>
+                {bpmDetectPhase !== "idle" && (
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-80"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.92, y: 16 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.92, y: 16 }}
+                            transition={{ type: "spring", damping: 22, stiffness: 260 }}
+                            className="fixed inset-0 z-90 flex items-center justify-center pointer-events-none"
+                        >
+                            <div className="pointer-events-auto w-80 rounded-2xl bg-black/70 backdrop-blur-2xl border border-white/15 shadow-[0_0_40px_rgba(99,102,241,0.2)] p-7 flex flex-col gap-5 items-center">
+                                {bpmDetectPhase === "countdown" && (
+                                    <>
+                                        <p className="text-white/40 text-xs uppercase tracking-widest self-start">get ready</p>
+                                        <motion.div
+                                            key={bpmDetectCountdown}
+                                            initial={{ scale: 1.5, opacity: 0 }}
+                                            animate={{ scale: 1, opacity: 1 }}
+                                            transition={{ type: "spring", damping: 18, stiffness: 300 }}
+                                            className="text-8xl font-black text-white tabular-nums"
+                                        >
+                                            {bpmDetectCountdown}
+                                        </motion.div>
+                                        <p className="text-white/40 text-xs text-center tracking-wide">recording starts when this hits zero</p>
+                                        <div className="w-full h-0.75 rounded-full bg-white/10 overflow-hidden">
+                                            <motion.div
+                                                key="countdown-progress"
+                                                initial={{ width: "0%" }}
+                                                animate={{ width: "100%" }}
+                                                transition={{ duration: 4, ease: "linear" }}
+                                                className="h-full rounded-full bg-white/50"
+                                            />
+                                        </div>
+                                        <button onClick={resetBpmDetect} className="text-white/30 text-xs hover:text-white/60 transition">cancel</button>
+                                    </>
+                                )}
+                                {bpmDetectPhase === "recording" && (
+                                    <>
+                                        <div className="flex items-center gap-2 self-start">
+                                            <motion.span
+                                                animate={{ opacity: [1, 0.2, 1] }}
+                                                transition={{ repeat: Infinity, duration: 0.8, ease: "easeInOut" }}
+                                                className="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0"
+                                            />
+                                            <p className="text-red-400 text-xs uppercase tracking-widest font-semibold">recording</p>
+                                        </div>
+                                        <motion.div
+                                            key={bpmDetectCountdown}
+                                            initial={{ scale: 1.5, opacity: 0 }}
+                                            animate={{ scale: 1, opacity: 1 }}
+                                            transition={{ type: "spring", damping: 18, stiffness: 300 }}
+                                            className="text-8xl font-black text-red-400 tabular-nums"
+                                        >
+                                            {bpmDetectCountdown}
+                                        </motion.div>
+                                        <p className="text-white/40 text-xs text-center tracking-wide">play your music — we're listening</p>
+                                        <div className="w-full h-0.75 rounded-full bg-white/10 overflow-hidden">
+                                            <motion.div
+                                                key="recording-progress"
+                                                initial={{ width: "0%" }}
+                                                animate={{ width: "100%" }}
+                                                transition={{ duration: 4, ease: "linear" }}
+                                                className="h-full rounded-full bg-red-500"
+                                            />
+                                        </div>
+                                        <button onClick={resetBpmDetect} className="text-white/30 text-xs hover:text-white/60 transition">cancel</button>
+                                    </>
+                                )}
+                                {bpmDetectPhase === "result" && (
+                                    <>
+                                        <p className="text-white/40 text-xs uppercase tracking-widest self-start">detected tempo</p>
+                                        <motion.div
+                                            initial={{ scale: 0.8, opacity: 0 }}
+                                            animate={{ scale: 1, opacity: 1 }}
+                                            className="text-8xl font-black text-white tabular-nums"
+                                        >
+                                            {detectedBpm}
+                                        </motion.div>
+                                        <p className="text-white/50 text-sm">BPM</p>
+                                        <div className="flex gap-2 w-full">
+                                            <button onClick={resetBpmDetect} className="flex-1 py-2.5 rounded-xl text-sm text-white/50 border border-white/10 hover:bg-white/5 transition">
+                                                dismiss
+                                            </button>
+                                            <button onClick={startBpmDetect} className="flex-1 py-2.5 rounded-xl text-sm text-white/70 border border-white/10 hover:bg-white/5 transition">
+                                                retry
+                                            </button>
+                                            <button onClick={applyDetectedBpm} className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-black bg-white hover:bg-white/90 transition">
+                                                apply
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
+                                {bpmDetectPhase === "error" && (
+                                    <>
+                                        <p className="text-white/40 text-xs uppercase tracking-widest">error</p>
+                                        <h2 className="text-white text-xl font-bold">Mic access denied</h2>
+                                        <p className="text-white/50 text-sm text-center">Allow microphone access to detect BPM</p>
+                                        <button onClick={resetBpmDetect} className="w-full py-2.5 rounded-xl text-sm font-semibold text-black bg-white hover:bg-white/90 transition mt-1">
+                                            ok
+                                        </button>
+                                    </>
+                                )}
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
+
             {(studioMode === "metronome") && (
                 <div className="hidden lg:block absolute bottom-20 left-1/2 -translate-x-1/2 z-50 text-sm font-medium text-white/80">
                     Press <span className="px-2 py-1 rounded bg-white/10">Space</span> to toggle {studioMode}
@@ -410,7 +654,7 @@ export function MetronomeControls() {
 
             <div className="hidden lg:flex flex-row justify-center absolute top-0 left-0 w-screen overflow-hidden py-6">
                 <motion.div className="flex flex-row items-center gap-4 z-5 rounded-full">
-                    <div className="flex flex-row justify-between gap-1 px-4 py-3 border border-white/10 rounded-full">
+                    <div className="flex flex-row items-center gap-1 px-4 py-3 border border-white/10 rounded-full">
                         <div className={`text-white text-sm transition-opacity duration-200 ${disableMeterControls() ? 'opacity-40' : 'opacity-100'}`}>
                             BPM
                         </div>
@@ -421,6 +665,14 @@ export function MetronomeControls() {
                             onChange={handleSetBpm}
                             className={`w-8 text-white text-end text-sm outline-none bg-transparent transition-opacity duration-200 ${disableMeterControls() ? 'opacity-40' : 'opacity-100'}`}
                         />
+                        <button
+                            onClick={startBpmDetect}
+                            disabled={disableMeterControls() || bpmDetectPhase !== "idle"}
+                            title="Auto detect BPM"
+                            className={`ml-1 p-1 rounded-full hover:bg-white/10 transition ${disableMeterControls() ? 'opacity-40 cursor-not-allowed' : 'opacity-100'}`}
+                        >
+                            <Zap className="w-3 h-3 text-white" />
+                        </button>
                     </div>
 
                     <div className="h-4 border border-white/30"></div>
@@ -658,13 +910,23 @@ export function MetronomeControls() {
                                 <span className="text-white/40 text-xs uppercase">Tempo</span>
                                 <div className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/10">
                                     <span className="text-white text-sm">BPM</span>
-                                    <input
-                                        type="text"
-                                        value={bpm}
-                                        disabled={disableMeterControls()}
-                                        onChange={handleSetBpm}
-                                        className="bg-transparent text-white text-right outline-none w-16 text-xl"
-                                    />
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="text"
+                                            value={bpm}
+                                            disabled={disableMeterControls()}
+                                            onChange={handleSetBpm}
+                                            className="bg-transparent text-white text-right outline-none w-16 text-xl"
+                                        />
+                                        <button
+                                            onClick={startBpmDetect}
+                                            disabled={disableMeterControls() || bpmDetectPhase !== "idle"}
+                                            title="Auto detect BPM"
+                                            className={`p-1.5 rounded-lg hover:bg-white/10 transition ${disableMeterControls() ? 'opacity-40 cursor-not-allowed' : 'opacity-100'}`}
+                                        >
+                                            <Zap className="w-4 h-4 text-white" />
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                             <div className="flex flex-col gap-4">

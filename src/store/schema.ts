@@ -63,10 +63,13 @@ export type AppState = {
     timeSignature: TimeSignature;
     isMetronomeActive: boolean;
 
+    isBpmDetecting: boolean;
+
     setCount: (count: number) => void;
     setBpm: (bpm: number) => void;
     setTimeSignature: (timeSignature: TimeSignature) => void;
     setIsMetronomeActive: (isMetronomeActive: boolean) => void;
+    setIsBpmDetecting: (isBpmDetecting: boolean) => void;
 
     // looper states
     loops: Loop[];

@@ -35,11 +35,13 @@ export const useAppStore = create<AppState>((set) => ({
     bpm: 120,
     timeSignature: "4/4",
     isMetronomeActive: false,
+    isBpmDetecting: false,
 
     setCount: (count: number) => set({ count }),
     setBpm: (bpm: number) => set({ bpm }),
     setTimeSignature: (timeSignature: TimeSignature) => set({ timeSignature }),
     setIsMetronomeActive: (isMetronomeActive: boolean) => set({ isMetronomeActive }),
+    setIsBpmDetecting: (isBpmDetecting: boolean) => set({ isBpmDetecting }),
 
     // looper states
     loops: [],
