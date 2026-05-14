@@ -2,12 +2,13 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import { SocialSidebar } from '@/components/social-sidebar';
 import { motion } from 'framer-motion';
-import { House, LoaderCircle, MaximizeIcon, Mic, MinimizeIcon, Monitor } from 'lucide-react';
+import { CircleHelp, House, LoaderCircle, MaximizeIcon, Mic, MinimizeIcon, Monitor } from 'lucide-react';
 import { useAppStore } from '@/store/use-app-store';
 import { calculateAmpsForPerformanceMode, PerformanceMode } from '@/utils/performance-mode-util';
 import { calculateIntensityFrame } from '@/utils/visualizer-util';
 import { easeInOut, gaussian, step } from '@/utils/math';
 import { StudioPanel } from '@/components/studio-panel';
+import { StudioHelpPanel } from '@/components/studio-help-panel';
 import { StudioActivationStatus, type Loop } from '@/store/schema';
 
 export const StudioLayout = () => {
@@ -16,6 +17,12 @@ export const StudioLayout = () => {
     const navigate = useNavigate();
     const containerRef = useRef<HTMLDivElement>(null);
     const [isFullscreen, setIsFullscreen] = useState(false);
+    const [isHelpOpen, setIsHelpOpen] = useState(() => !localStorage.getItem('studio_help_seen'));
+
+    const closeHelp = () => {
+        localStorage.setItem('studio_help_seen', 'true');
+        setIsHelpOpen(false);
+    };
 
     const audioCtxRef = useRef<AudioContext | null>(null);
     const analyserRef = useRef<AnalyserNode | null>(null);
@@ -82,7 +89,8 @@ export const StudioLayout = () => {
         addLoop(newLoop);
 
         recordedChunks.current = [];
-        setLooperState("idle");
+        setLooperState("playing");
+        setIsMetronomeActive(true);
     };
 
     const playAndLoopAllBars = () => {
@@ -528,7 +536,26 @@ export const StudioLayout = () => {
                         </motion.button>
                         <div className='w-4/5 border border-white/30'></div>
                         <StudioPanel />
+                        <div className='w-4/5 border border-white/30'></div>
+                        <motion.button
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            whileHover={{ scale: 1.1, backgroundColor: isHelpOpen ? "rgba(255,255,255,0.2)" : "rgba(255, 255, 255, 0.15)" }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => isHelpOpen ? closeHelp() : setIsHelpOpen(true)}
+                            className="z-50 p-2 rounded-full bg-black/20 backdrop-blur-md border border-white/10 transition-all shadow-lg cursor-pointer"
+                            title="Help"
+                        >
+                            <CircleHelp className="w-4.5 h-4.5 text-white" />
+                        </motion.button>
                     </div>
+
+                    <StudioHelpPanel
+                        isOpen={isHelpOpen}
+                        onClose={closeHelp}
+                        studioMode={studioMode}
+                    />
+
 
                     {!isFullscreen ? <SocialSidebar /> : <></>}
                 </main>

@@ -135,13 +135,39 @@ export function MetronomeControls() {
 
     useEffect(() => {
         const onKeyDown = (e: KeyboardEvent) => {
+            const target = e.target as HTMLElement;
+            if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") return;
+
             if (e.code === "Space") {
                 e.preventDefault();
-                toggleMetronome();
+                if (studioMode === "metronome") {
+                    toggleMetronome();
+                } else if (studioMode === "looper") {
+                    const { looperState: ls } = useAppStore.getState();
+                    if (ls === "idle") {
+                        setIsMetronomeActive(true);
+                        setLooperState("playing");
+                    } else if (ls === "playing") {
+                        setIsMetronomeActive(false);
+                        setLooperState("stop-playing");
+                    }
+                }
+            }
+
+            if (e.code === "KeyR" && studioMode === "looper") {
+                e.preventDefault();
+                const { looperState: ls } = useAppStore.getState();
+                if (ls === "idle") {
+                    setLooperState("ready-for-count-in");
+                    setIsMetronomeActive(true);
+                } else if (ls === "recording") {
+                    setLooperState("saving-recording");
+                    setIsMetronomeActive(false);
+                }
             }
         };
 
-        if (studioMode === "metronome") {
+        if (studioMode === "metronome" || studioMode === "looper") {
             window.addEventListener("keydown", onKeyDown);
         }
 
@@ -652,6 +678,14 @@ export function MetronomeControls() {
                 </div>
             )}
 
+            {(studioMode === "looper") && (
+                <div className="hidden lg:flex items-center gap-3 absolute bottom-36 left-1/2 -translate-x-1/2 z-50 text-sm font-medium text-white/60">
+                    <span><span className="px-2 py-1 rounded bg-white/10 text-white/80">Space</span> play / stop</span>
+                    <span className="text-white/20">·</span>
+                    <span><span className="px-2 py-1 rounded bg-white/10 text-white/80">R</span> record</span>
+                </div>
+            )}
+
             <div className="hidden lg:flex flex-row justify-center absolute top-0 left-0 w-screen overflow-hidden py-6">
                 <motion.div className="flex flex-row items-center gap-4 z-5 rounded-full">
                     <div className="flex flex-row items-center gap-1 px-4 py-3 border border-white/10 rounded-full">
@@ -665,14 +699,18 @@ export function MetronomeControls() {
                             onChange={handleSetBpm}
                             className={`w-8 text-white text-end text-sm outline-none bg-transparent transition-opacity duration-200 ${disableMeterControls() ? 'opacity-40' : 'opacity-100'}`}
                         />
-                        <button
-                            onClick={startBpmDetect}
-                            disabled={disableMeterControls() || bpmDetectPhase !== "idle"}
-                            title="Auto detect BPM"
-                            className={`ml-1 p-1 rounded-full hover:bg-white/10 transition ${disableMeterControls() ? 'opacity-40 cursor-not-allowed' : 'opacity-100'}`}
-                        >
-                            <Zap className="w-3 h-3 text-white" />
-                        </button>
+                        <div className="relative group ml-1">
+                            <button
+                                onClick={startBpmDetect}
+                                disabled={disableMeterControls() || bpmDetectPhase !== "idle"}
+                                className={`p-1 rounded-full hover:bg-white/10 transition ${disableMeterControls() ? 'opacity-40 cursor-not-allowed' : 'opacity-100'}`}
+                            >
+                                <Zap className="w-3 h-3 text-white" />
+                            </button>
+                            <div className="absolute top-full mt-1.5 left-1/2 -translate-x-1/2 hidden group-hover:block pointer-events-none whitespace-nowrap text-xs text-white/60 bg-black/80 backdrop-blur-sm px-2 py-1 rounded-lg border border-white/10 z-50">
+                                Auto-detect tempo
+                            </div>
+                        </div>
                     </div>
 
                     <div className="h-4 border border-white/30"></div>
