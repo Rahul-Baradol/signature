@@ -13,6 +13,7 @@ import { FrameProfiler } from '@/utils/profiling';
 export const AnimationLayout = () => {
   const navigate = useNavigate();
   const [loadingProgress, setLoadingProgress] = useState(0);
+  const [autoplayBlocked, setAutoplayBlocked] = useState(false);
 
   const {
     file, isDataReady,
@@ -34,6 +35,8 @@ export const AnimationLayout = () => {
       audioRef.current.pause();
       setIsPlaying(false);
     } else {
+      setAutoplayBlocked(false);
+      audioCtxRef.current?.resume();
       audioRef.current.play();
       setIsPlaying(true);
     }
@@ -134,9 +137,6 @@ export const AnimationLayout = () => {
       const src = audioCtx.createMediaElementSource(audio);
       src.connect(audioCtx.destination);
 
-      await audio.play();
-      setIsPlaying(true);
-
       new FrameProfiler().start();
 
       const tick = () => {
@@ -188,6 +188,17 @@ export const AnimationLayout = () => {
       };
 
       animationFrameRef.current = requestAnimationFrame(tick);
+
+      try {
+        await audioCtx.resume();
+        await audio.play();
+        setIsPlaying(true);
+      } catch {
+        // Autoplay blocked (iOS Safari requires a user gesture). The animation
+        // loop is already running; the user can tap play to start audio.
+        setIsPlaying(false);
+        setAutoplayBlocked(true);
+      }
     };
 
     reader.readAsArrayBuffer(file);
@@ -334,6 +345,7 @@ export const AnimationLayout = () => {
                   isFullscreen={isFullscreen}
                   audioRef={audioRef}
                   onToggle={togglePlay}
+                  autoplayBlocked={autoplayBlocked}
                 />
               </div>
 

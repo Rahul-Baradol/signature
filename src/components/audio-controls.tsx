@@ -2,14 +2,16 @@ import { FiPlay } from "react-icons/fi";
 import { CiPause1 } from "react-icons/ci";
 import { useAppStore } from "@/store/use-app-store";
 import { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Props {
   isFullscreen: boolean;
   audioRef: React.MutableRefObject<HTMLAudioElement | null>;
   onToggle: () => void;
+  autoplayBlocked?: boolean;
 }
 
-export const AudioControls = ({ audioRef, onToggle, isFullscreen }: Props) => {
+export const AudioControls = ({ audioRef, onToggle, isFullscreen, autoplayBlocked }: Props) => {
   const duration = audioRef.current?.duration || 0;
   const { isPlaying, currentTime, setCurrentTime } = useAppStore();
 
@@ -45,10 +47,12 @@ export const AudioControls = ({ audioRef, onToggle, isFullscreen }: Props) => {
     };
   }, [])
 
+  const forceVisible = autoplayBlocked && !isFullscreen;
+
   return (
     <div
       ref={ref}
-      className={`bottom-5 w-11/12 max-w-3xl flex flex-row items-center justify-center gap-4 ${isFullscreen? 'opacity-0' : 'opacity-40'} ${showControls ? 'opacity-100' : ''} hover:opacity-100 transition-opacity duration-750 bg-black/20 p-4 rounded-xl backdrop-blur-sm`}
+      className={`bottom-5 w-11/12 max-w-3xl flex flex-row items-center justify-center gap-4 ${isFullscreen ? 'opacity-0' : 'opacity-40'} ${showControls || forceVisible ? 'opacity-100' : ''} hover:opacity-100 transition-opacity duration-750 bg-black/20 p-4 rounded-xl backdrop-blur-sm`}
     >
       <input
         type="range"
@@ -67,12 +71,34 @@ export const AudioControls = ({ audioRef, onToggle, isFullscreen }: Props) => {
       <span className="text-white font-mono text-sm min-w-[45px]">
         {formatTime(currentTime)}
       </span>
-      <button
-        onClick={onToggle}
-        className="text-white border-2 border-gray-400 rounded-lg px-4 py-2 hover:bg-white/20 transition-all"
-      >
-        {isPlaying ? <CiPause1 /> : <FiPlay />}
-      </button>
+      <div className="relative">
+        <AnimatePresence>
+          {autoplayBlocked && (
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 6 }}
+              transition={{ duration: 0.2 }}
+              className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 whitespace-nowrap"
+            >
+              <motion.span
+                animate={{ scale: [1, 1.04, 1] }}
+                transition={{ repeat: Infinity, duration: 1.4, ease: "easeInOut" }}
+                className="block text-xs text-white bg-violet-600/90 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-lg"
+              >
+                Tap to play
+              </motion.span>
+              <div className="mx-auto mt-1 w-2 h-2 bg-violet-600/90 rotate-45 translate-y-[-60%]" />
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <button
+          onClick={onToggle}
+          className={`text-white border-2 rounded-lg px-4 py-2 hover:bg-white/20 transition-all ${autoplayBlocked ? 'border-violet-400 animate-pulse' : 'border-gray-400'}`}
+        >
+          {isPlaying ? <CiPause1 /> : <FiPlay />}
+        </button>
+      </div>
     </div>
   );
 };
