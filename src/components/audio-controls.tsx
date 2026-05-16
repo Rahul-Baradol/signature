@@ -68,7 +68,7 @@ export const AudioControls = ({ audioRef, onToggle, isFullscreen, autoplayBlocke
         }}
         className="w-full accent-violet-500"
       />
-      <span className="text-white font-mono text-sm min-w-[45px]">
+      <span className="text-white font-mono text-sm min-w-11.25">
         {formatTime(currentTime)}
       </span>
       <div className="relative">
