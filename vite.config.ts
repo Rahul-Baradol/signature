@@ -13,7 +13,8 @@ export default defineConfig({
     }),
     tailwindcss(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
+      injectRegister: false,
       includeAssets: ['music.svg', 'me.svg'],
       manifest: {
         name: 'Signature',

@@ -3,6 +3,7 @@ import { lazy, Suspense } from 'react';
 import { AnimationLayout } from '@/layouts/animation-layout';
 import { StudioLayout } from './layouts/studio-layout';
 import GradientDesign from './pages/gradient';
+import { UpdatePrompt } from '@/components/update-prompt';
 
 const Landing = lazy(() => import('@/pages/landing'));
 const NotFound = lazy(() => import('@/pages/not-found'));
@@ -13,6 +14,7 @@ const Looper = lazy(() => import('./pages/studio/looper'));
 function App() {
     return (
         <Router>
+            <UpdatePrompt />
             <Suspense>
                 <Routes>
                     <Route path="/" element={<Landing />} />
