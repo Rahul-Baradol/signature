@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/use-app-store';
 import { SocialSidebar } from '@/components/social-sidebar';
+import { InstallPrompt } from '@/components/install-prompt';
 import { Play, ArrowRight, LoaderCircle, Monitor } from 'lucide-react';
 import { StudioActivationStatus } from '@/store/schema';
 import { deserializeLooperState } from '@/utils/looper-file-util';
@@ -87,6 +88,7 @@ const Landing: React.FC = () => {
       </div>
 
       <SocialSidebar />
+      <InstallPrompt />
 
       <div className="relative z-20 w-full lg:w-1/2 px-8 md:px-20 lg:ml-24">
         <motion.div
