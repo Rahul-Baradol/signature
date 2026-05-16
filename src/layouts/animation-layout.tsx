@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AudioControls } from '@/components/audio-controls';
 import { SocialSidebar } from '@/components/social-sidebar';
 import { calculateAmpsForPerformanceMode, PerformanceMode } from '@/utils/performance-mode-util';
+import { isMobileDevice } from '@/utils/device-util';
 import { motion, AnimatePresence } from 'framer-motion';
 import { House, MaximizeIcon, MinimizeIcon } from 'lucide-react';
 import { calculateIntensityFrame } from '@/utils/visualizer-util';
@@ -20,6 +21,8 @@ export const AnimationLayout = () => {
     setCurrentFrame, setIsPlaying, setIsDataReady,
     setAmps, setCurrentTime, setIntensity
   } = useAppStore();
+
+  const performanceMode = isMobileDevice() ? PerformanceMode.Low : PerformanceMode.High;
 
   const frameMetaRef = useRef<{ sampleRate: number; hopSize: number; frameCount: number } | null>(null);
   const intensityFramesRef = useRef<{ prev: number; current: number }[] | null>(null);
@@ -119,7 +122,7 @@ export const AnimationLayout = () => {
 
         intensityFrames.push({ prev: prevIntensity, current });
         prevIntensity = current;
-        ampsFrames.push(calculateAmpsForPerformanceMode(Array.from(dataArray), PerformanceMode.High));
+        ampsFrames.push(calculateAmpsForPerformanceMode(Array.from(dataArray), performanceMode));
       }
 
       if (cancelled) {

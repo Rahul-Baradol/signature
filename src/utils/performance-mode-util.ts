@@ -13,8 +13,6 @@ export function calculateAmpsForPerformanceMode(amps: number[], mode: Performanc
     switch (mode) {
         case PerformanceMode.Low:
             return downsampleAmps(amps, 16, GradientUpdateMode.Constant);
-        case PerformanceMode.Medium:
-            return downsampleAmps(amps, 8, GradientUpdateMode.Constant);
         case PerformanceMode.High:
         default:
             return downsampleAmps(amps, 4, GradientUpdateMode.Constant);
