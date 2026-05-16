@@ -5,6 +5,7 @@ import { MdOutlineFileUpload } from "react-icons/md";
 import github from '../public/github.png'
 import linkedin from '../public/linkedin2.png'
 import portfolio from '../public/me.svg'
+import { FrameProfiler } from "./utils/profiling";
 
 export default function BeatVisualizer() {
   const [file, setFile] = useState<File | null>(null);
@@ -68,6 +69,8 @@ export default function BeatVisualizer() {
 
         analyserRef.current = liveAnalyser;
         dataArrayRef.current = liveData;
+
+        new FrameProfiler().start();
 
         audio.play();
         setIsPlaying(true);
