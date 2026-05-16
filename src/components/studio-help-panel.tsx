@@ -17,7 +17,15 @@ const modeContent: Record<StudioMode, { title: string; tips: { heading: string; 
             {
                 heading: 'Intensity pulse',
                 body: 'The floating icons animate in response to how loud your signal is. Great for spotting peaks during a performance.',
-            }
+            },
+            {
+                heading: 'Free recording',
+                body: 'Hit the record button (or press R) to capture audio freely - no bars, no count-in. Hit it again to stop.',
+            },
+            {
+                heading: 'Export as MP3',
+                body: 'After stopping, export your take as an MP3 with a custom filename, or discard it and start over.',
+            },
         ],
     },
     metronome: {

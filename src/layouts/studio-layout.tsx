@@ -12,7 +12,7 @@ import { StudioHelpPanel } from '@/components/studio-help-panel';
 import { StudioActivationStatus, type Loop } from '@/store/schema';
 
 export const StudioLayout = () => {
-    const { activateStudio, count, timeSignature, bpm, studioMode, intensity, setAmps, setBpm, setIntensity, microphonePermission, setMicrophonePermission, isMetronomeActive, looperState, loops, addLoop, setLooperState, setIsMetronomeActive, setTimeSignature, loopBarCount, setLoopBarCount } = useAppStore();
+    const { activateStudio, count, timeSignature, bpm, studioMode, intensity, setAmps, setBpm, setIntensity, microphonePermission, setMicrophonePermission, isMetronomeActive, looperState, loops, addLoop, setLooperState, setIsMetronomeActive, setTimeSignature, loopBarCount, setLoopBarCount, openmicRecorderState, setOpenmicRecorderState, setOpenmicRecording } = useAppStore();
 
     const navigate = useNavigate();
     const containerRef = useRef<HTMLDivElement>(null);
@@ -57,17 +57,22 @@ export const StudioLayout = () => {
         workletNodeRef.current = workletNode;
     };
 
-    const stopRecording = () => {
+    const finalizeRecordedBuffer = (): AudioBuffer | null => {
         if (audioCtxRef.current == null || workletNodeRef.current == null) {
-            return;
+            return null;
         }
-        workletNodeRef.current?.port.postMessage({ command: 'STOP' });
+        workletNodeRef.current.port.postMessage({ command: 'STOP' });
 
         const totalLength = recordedChunks.current.reduce((acc, chunk) => acc + chunk.length, 0);
-        const audioBuffer = audioCtxRef.current!.createBuffer(
+        if (totalLength === 0) {
+            recordedChunks.current = [];
+            return null;
+        }
+
+        const audioBuffer = audioCtxRef.current.createBuffer(
             1,
             totalLength,
-            audioCtxRef.current!.sampleRate
+            audioCtxRef.current.sampleRate
         );
 
         const channelData = audioBuffer.getChannelData(0);
@@ -75,6 +80,16 @@ export const StudioLayout = () => {
         for (const chunk of recordedChunks.current) {
             channelData.set(chunk, offset);
             offset += chunk.length;
+        }
+
+        recordedChunks.current = [];
+        return audioBuffer;
+    };
+
+    const stopRecording = () => {
+        const audioBuffer = finalizeRecordedBuffer();
+        if (!audioBuffer) {
+            return;
         }
 
         const newLoop: Loop = {
@@ -88,9 +103,14 @@ export const StudioLayout = () => {
 
         addLoop(newLoop);
 
-        recordedChunks.current = [];
         setLooperState("playing");
         setIsMetronomeActive(true);
+    };
+
+    const stopOpenmicRecording = () => {
+        const audioBuffer = finalizeRecordedBuffer();
+        setOpenmicRecording(audioBuffer);
+        setOpenmicRecorderState(audioBuffer ? "recorded" : "idle");
     };
 
     const playAndLoopAllBars = () => {
@@ -207,6 +227,14 @@ export const StudioLayout = () => {
             setIsMetronomeActive(false);
         }
     }, [isMetronomeActive, looperState])
+
+    useEffect(() => {
+        if (openmicRecorderState === "recording") {
+            startRecording();
+        } else if (openmicRecorderState === "stop-requested") {
+            stopOpenmicRecording();
+        }
+    }, [openmicRecorderState])
 
     const toggleFullscreen = () => {
         if (!document.fullscreenElement) {
@@ -328,6 +356,15 @@ export const StudioLayout = () => {
             })
         } else if ((studioMode === "openmic" || studioMode === "looper") && microphonePermission === "granted") {
             tick();
+        }
+
+        if (studioMode !== "openmic" && openmicRecorderState !== "idle") {
+            if (openmicRecorderState === "recording") {
+                workletNodeRef.current?.port.postMessage({ command: 'STOP' });
+                recordedChunks.current = [];
+            }
+            setOpenmicRecorderState("idle");
+            setOpenmicRecording(null);
         }
 
         if (studioMode === "looper" && loops.length > 0) {

@@ -10,6 +10,56 @@ interface ExportMp3Options {
   onProgress?: (progress: number) => void;
 }
 
+interface ExportBufferMp3Options {
+  buffer: AudioBuffer;
+  filename: string;
+  onProgress?: (progress: number) => void;
+}
+
+async function encodeAndDownloadMp3(
+  pcmFloat: Float32Array,
+  sampleRate: number,
+  filename: string,
+  onProgress?: (progress: number) => void,
+): Promise<void> {
+  const pcmInt16 = new Int16Array(pcmFloat.length);
+  for (let i = 0; i < pcmFloat.length; i++) {
+    pcmInt16[i] = Math.max(-32768, Math.min(32767, Math.round(pcmFloat[i] * 32767)));
+  }
+
+  const encoder = new Mp3Encoder(1, sampleRate, 128);
+  const CHUNK = 1152;
+  const mp3Chunks: Uint8Array[] = [];
+
+  for (let i = 0; i < pcmInt16.length; i += CHUNK) {
+    const slice = pcmInt16.subarray(i, i + CHUNK);
+    const encoded = encoder.encodeBuffer(slice);
+    if (encoded.length > 0) mp3Chunks.push(encoded);
+    onProgress?.((i + CHUNK) / pcmInt16.length);
+    if (((i / CHUNK) % 50) === 0) await new Promise<void>((r) => setTimeout(r, 0));
+  }
+
+  const tail = encoder.flush();
+  if (tail.length > 0) mp3Chunks.push(tail);
+
+  const blob = new Blob(mp3Chunks.map(chunk => new Uint8Array(chunk)), { type: "audio/mpeg" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${filename}.mp3`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function exportAudioBufferToMp3({
+  buffer,
+  filename,
+  onProgress,
+}: ExportBufferMp3Options): Promise<void> {
+  const pcmFloat = buffer.getChannelData(0);
+  await encodeAndDownloadMp3(pcmFloat, buffer.sampleRate, filename, onProgress);
+}
+
 export async function exportLoopsToMp3({
   loops,
   bpm,
@@ -48,36 +98,5 @@ export async function exportLoopsToMp3({
 
   const rendered = await offCtx.startRendering();
 
-  // ── 2. Convert Float32 PCM → Int16 ────────────────────────────────────────
-  const pcmFloat = rendered.getChannelData(0);
-  const pcmInt16 = new Int16Array(pcmFloat.length);
-  for (let i = 0; i < pcmFloat.length; i++) {
-    pcmInt16[i] = Math.max(-32768, Math.min(32767, Math.round(pcmFloat[i] * 32767)));
-  }
-
-  // ── 3. Encode to MP3 with lamejs ──────────────────────────────────────────
-  const encoder = new Mp3Encoder(1, SAMPLE_RATE, 128);
-  const CHUNK = 1152; // must be a multiple of 576
-  const mp3Chunks: Uint8Array[] = [];
-
-  for (let i = 0; i < pcmInt16.length; i += CHUNK) {
-    const slice = pcmInt16.subarray(i, i + CHUNK);
-    const encoded = encoder.encodeBuffer(slice); // returns Uint8Array
-    if (encoded.length > 0) mp3Chunks.push(encoded);
-    onProgress?.((i + CHUNK) / pcmInt16.length);
-    // Yield every 50 chunks to keep the UI responsive
-    if (((i / CHUNK) % 50) === 0) await new Promise<void>((r) => setTimeout(r, 0));
-  }
-
-  const tail = encoder.flush(); // returns Uint8Array
-  if (tail.length > 0) mp3Chunks.push(tail);
-
-  // ── 4. Download ───────────────────────────────────────────────────────────
-  const blob = new Blob(mp3Chunks.map(chunk => new Uint8Array(chunk)), { type: "audio/mpeg" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `${filename}.mp3`;
-  a.click();
-  URL.revokeObjectURL(url);
+  await encodeAndDownloadMp3(rendered.getChannelData(0), SAMPLE_RATE, filename, onProgress);
 }

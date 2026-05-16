@@ -11,6 +11,8 @@ export enum StudioActivationStatus {
 
 export type LooperState = "idle" | "playing" | "stop-playing" | "saving-recording" | "ready-for-count-in" | "count-in" | "recording";
 
+export type OpenmicRecorderState = "idle" | "recording" | "stop-requested" | "recorded";
+
 export type MicrophonePermissionStatus = "granted" | "denied" | "loading" | "prompt";
 
 export type StudioMode = "openmic" | "metronome" | "looper";
@@ -81,4 +83,10 @@ export type AppState = {
     setLoops: (loops: Loop[]) => void;
     setLooperState: (looperState: LooperState) => void;
     setLoopBarCount: (loopBarCount: number) => void;
+
+    // openmic recording states
+    openmicRecorderState: OpenmicRecorderState;
+    openmicRecording: AudioBuffer | null;
+    setOpenmicRecorderState: (openmicRecorderState: OpenmicRecorderState) => void;
+    setOpenmicRecording: (openmicRecording: AudioBuffer | null) => void;
 };

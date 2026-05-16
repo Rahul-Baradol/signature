@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { StudioActivationStatus, type AppState, type Loop, type LooperState, type MicrophonePermissionStatus, type StudioMode, type TimeSignature } from "./schema";
+import { StudioActivationStatus, type AppState, type Loop, type LooperState, type MicrophonePermissionStatus, type OpenmicRecorderState, type StudioMode, type TimeSignature } from "./schema";
 
 export const useAppStore = create<AppState>((set) => ({
     // general
@@ -53,4 +53,10 @@ export const useAppStore = create<AppState>((set) => ({
     removeLoop: (index: number) => set((state) => ({ loops: state.loops.filter((_, i) => i !== index) })),
     setLooperState: (looperState: LooperState) => set({ looperState }),
     setLoopBarCount: (loopBarCount: number) => set({ loopBarCount }),
+
+    // openmic recording states
+    openmicRecorderState: "idle",
+    openmicRecording: null,
+    setOpenmicRecorderState: (openmicRecorderState: OpenmicRecorderState) => set({ openmicRecorderState }),
+    setOpenmicRecording: (openmicRecording: AudioBuffer | null) => set({ openmicRecording }),
 }));
