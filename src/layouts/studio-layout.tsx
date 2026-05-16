@@ -10,6 +10,7 @@ import { easeInOut, gaussian, step } from '@/utils/math';
 import { StudioPanel } from '@/components/studio-panel';
 import { StudioHelpPanel } from '@/components/studio-help-panel';
 import { StudioActivationStatus, type Loop } from '@/store/schema';
+import { isMobileDevice } from '@/utils/device-util';
 
 export const StudioLayout = () => {
     const { activateStudio, count, timeSignature, bpm, studioMode, intensity, setAmps, setBpm, setIntensity, microphonePermission, setMicrophonePermission, isMetronomeActive, looperState, loops, addLoop, setLooperState, setIsMetronomeActive, setTimeSignature, loopBarCount, setLoopBarCount, openmicRecorderState, setOpenmicRecorderState, setOpenmicRecording } = useAppStore();
@@ -440,7 +441,7 @@ export const StudioLayout = () => {
         };
     }, [microphonePermission]);
 
-    const isMobile = /iPhone|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
+    const isMobile = isMobileDevice();
 
     if (isMobile) {
         return (

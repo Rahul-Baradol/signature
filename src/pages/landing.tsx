@@ -3,9 +3,10 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/use-app-store';
 import { SocialSidebar } from '@/components/social-sidebar';
-import { Play, ArrowRight, LoaderCircle } from 'lucide-react';
+import { Play, ArrowRight, LoaderCircle, Monitor } from 'lucide-react';
 import { StudioActivationStatus } from '@/store/schema';
 import { deserializeLooperState } from '@/utils/looper-file-util';
+import { isMobileDevice } from '@/utils/device-util';
 
 const SAMPLES = [
   { id: 1, title: 'Ecstatic Dissolve', artist: 'Me', file: '/mysongs/ecstatic-dissolve.mp3' },
@@ -17,12 +18,12 @@ const Landing: React.FC = () => {
     activateStudio,
     setFile, setIsPlaying, setIsDataReady, setCurrentTime, setCurrentFrame, setHasInitializedAudio,
     setAmps, setIntensity,
-    setStudioMode, 
+    setStudioMode,
     setCount, setBpm, setTimeSignature, setIsMetronomeActive,
     setLoops, setLooperState, setLoopBarCount,
   } = useAppStore();
   const navigate = useNavigate();
-  const isMobile = /iPhone|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
+  const isMobile = isMobileDevice();
   const [videoDownloading, setVideoDownloading] = useState(true);
   const [loadingSample, setLoadingSample] = useState<number | null>(null);
   const [loadingDemo, setLoadingDemo] = useState(false);
@@ -110,7 +111,7 @@ const Landing: React.FC = () => {
           </h1>
 
           <p className="max-w-sm text-slate-400 text-lg font-light mb-10 leading-relaxed ">
-            A platform to visualize and create music.
+            A platform to visualize and create prototypic music.
           </p>
 
           <div className="flex flex-col gap-10">
@@ -172,6 +173,18 @@ const Landing: React.FC = () => {
                 </div>
               )}
             </div>
+
+            {
+              isMobile ? <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8 }}
+                className="-mt-4 flex items-center gap-2 text-xs text-slate-500 font-bold"
+              >
+                <Monitor size={11} className="text-sky-400/70" />
+                <span>Studio mode is best supported on desktops &amp; laptops</span>
+              </motion.div> : null
+            }
 
             <div className="flex flex-col gap-5">
               {/* Visualizer quick peek */}
