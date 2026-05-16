@@ -87,7 +87,7 @@ export const InstallPrompt: React.FC = () => {
           whileTap={{ scale: 0.95 }}
           onClick={handleInstall}
           aria-label="Install app"
-          className="group flex items-center gap-2 p-2 sm:px-4 sm:py-2.5 bg-white/5 backdrop-blur-xl border border-white/10 rounded-full text-slate-200 hover:text-white transition-colors cursor-pointer"
+          className="group flex items-center gap-2 p-2 sm:px-4 sm:py-2.5 bg-slate-900 border border-white/10 rounded-full text-slate-200 hover:text-white transition-colors cursor-pointer shadow-lg shadow-black/40"
         >
           <Download size={14} className="text-sky-400" />
           <span className="hidden sm:inline text-[11px] font-bold uppercase tracking-widest">Install app</span>
@@ -95,7 +95,7 @@ export const InstallPrompt: React.FC = () => {
         <button
           onClick={handleDismiss}
           aria-label="Dismiss"
-          className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+          className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-slate-900 border border-white/10 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer shadow-lg shadow-black/40"
         >
           <X size={12} />
         </button>

@@ -266,13 +266,13 @@ const Landing: React.FC = () => {
         </motion.div>
       </div>
 
-      <motion.div
-        className="absolute right-[-10%] lg:right-[-5%] top-1/2 -translate-y-1/2 hidden md:block w-3/5"
-        initial={{ opacity: 0, scale: 0.9, rotate: 5 }}
-        animate={{ opacity: 1, scale: 1, rotate: -2 }}
-        transition={{ duration: 2, ease: [0.16, 1, 0.3, 1] }}
-      >
-        <div className="relative p-4 bg-white/5 backdrop-blur-3xl rounded-3xl border border-white/10 shadow-2xl">
+      <div className="absolute right-[-10%] lg:right-[-5%] top-1/2 -translate-y-1/2 hidden md:block w-3/5 z-10">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9, rotate: 5 }}
+          animate={{ opacity: 1, scale: 1, rotate: -2 }}
+          transition={{ duration: 2, ease: [0.16, 1, 0.3, 1] }}
+          className="relative p-4 bg-white/5 backdrop-blur-3xl rounded-3xl border border-white/10 shadow-2xl"
+        >
           <div className="relative rounded-2xl h-[60vh] overflow-hidden border border-white/5">
             {videoDownloading ? (
               <div className="w-full h-full inset-0 z-10 overflow-hidden">
@@ -293,10 +293,8 @@ const Landing: React.FC = () => {
             </video>
             <div className="absolute inset-0 bg-linear-to-r from-[#030712] via-transparent to-transparent" />
           </div>
-        </div>
-
-
-      </motion.div>
+        </motion.div>
+      </div>
     </div>
   );
 };
