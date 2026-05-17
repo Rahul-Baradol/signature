@@ -116,7 +116,7 @@ const Landing: React.FC = () => {
           </h1>
 
           <p className="max-w-sm text-slate-400 text-lg font-light mb-10 leading-relaxed ">
-            A platform to visualize and create prototypic music.
+            A platform to visualize and prototype music.
           </p>
 
           <div className="flex flex-col gap-10">
