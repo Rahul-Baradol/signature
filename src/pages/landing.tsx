@@ -30,6 +30,7 @@ const Landing: React.FC = () => {
   const [loadingDemo, setLoadingDemo] = useState(false);
 
   useEffect(() => {
+    console.log("bounce")
     setFile(null);
     setIsPlaying(false);
     setIsDataReady(false);
