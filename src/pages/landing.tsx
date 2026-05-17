@@ -56,7 +56,7 @@ const Landing: React.FC = () => {
       const file = new File([blob], `${sample.title}.mp3`, { type: 'audio/mpeg' });
 
       setFile(file);
-      setTimeout(() => navigate('/signature/gradient'), 400);
+      navigate('/signature/gradient', { replace: true })
     } catch (error) {
       console.error("Error loading sample:", error);
       setLoadingSample(null);
@@ -73,7 +73,9 @@ const Landing: React.FC = () => {
       setBpm(state.bpm);
       setTimeSignature(state.timeSignature);
       setLoopBarCount(state.loopBarCount);
-      navigate('/studio/looper');
+      navigate('/studio/looper', {
+        replace: true
+      });
     } catch (error) {
       console.error("Error loading demo:", error);
       setLoadingDemo(false);
@@ -129,7 +131,9 @@ const Landing: React.FC = () => {
                       const file = e.target.files?.[0];
                       if (file) {
                         setFile(file);
-                        navigate('/signature/gradient');
+                        navigate('/signature/gradient', {
+                          replace: true
+                        });
                       }
                     }}
                   />
@@ -153,7 +157,9 @@ const Landing: React.FC = () => {
                         }`}
                       onClick={() => {
                         if (activateStudio == StudioActivationStatus.ACTIVE) {
-                          navigate('/studio/looper')
+                          navigate('/studio/looper', {
+                            replace: true
+                          })
                         }
                       }}
                     >

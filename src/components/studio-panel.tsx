@@ -30,7 +30,9 @@ export const StudioPanel = () => {
           whileHover={{ scale: 1.1, backgroundColor:  "rgba(255, 255, 255, 0.15)" }}
           whileTap={{ scale: 0.9 }}
           onClick={() => {
-            navigate(item.path);
+            navigate(item.path, {
+              replace: true
+            });
           }}
           className={`z-50 p-2 rounded-full backdrop-blur-md border border-white/10 transition-all shadow-lg`}
           title={item.label}
