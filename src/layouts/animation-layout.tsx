@@ -59,6 +59,11 @@ export const AnimationLayout = () => {
     audioCtxRef.current = audioCtx;
     const reader = new FileReader();
 
+    const updateCurrentTime = (e: Event) => {
+      const target = e.target as HTMLAudioElement;
+      setCurrentTime(target.currentTime);
+    }
+
     reader.onload = async (e) => {
       if (cancelled) return;
 
@@ -136,7 +141,10 @@ export const AnimationLayout = () => {
       setIsDataReady(true);
 
       const audio = new Audio(URL.createObjectURL(file));
+      
       audioRef.current = audio;
+      audioRef.current.addEventListener("timeupdate", updateCurrentTime);
+
       const src = audioCtx.createMediaElementSource(audio);
       src.connect(audioCtx.destination);
 
@@ -156,7 +164,6 @@ export const AnimationLayout = () => {
 
         const { sampleRate, hopSize, frameCount } = frameMetaRef.current;
         const curTime = audioRef.current.currentTime;
-        setCurrentTime(curTime);
 
         const exactFrame = (curTime * sampleRate) / hopSize;
         const currentIdx = Math.floor(exactFrame);
@@ -217,6 +224,8 @@ export const AnimationLayout = () => {
         prev: 0,
         current: 0
       });
+
+      audioRef.current?.removeEventListener("timeupdate", updateCurrentTime);
     };
   }, [file]);
 
@@ -240,11 +249,6 @@ export const AnimationLayout = () => {
     document.addEventListener('fullscreenchange', handleFsChange);
     return () => document.removeEventListener('fullscreenchange', handleFsChange);
   }, []);
-
-  // const navItems = [
-  //   { path: '/signature/gradient', label: 'Gradient', icon: Icons.Circle },
-  //   { path: '/signature/concentric-rings', label: 'Rings', icon: Icons.Rotate3D },
-  // ];
 
   return (
     <div

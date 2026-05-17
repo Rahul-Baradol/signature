@@ -13,7 +13,7 @@ interface Props {
 
 export const AudioControls = ({ audioRef, onToggle, isFullscreen, autoplayBlocked }: Props) => {
   const duration = audioRef.current?.duration || 0;
-  const { isPlaying, currentTime, setCurrentTime } = useAppStore();
+  const { isPlaying, currentTime } = useAppStore();
 
   const [showControls, setShowControls] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
@@ -22,6 +22,14 @@ export const AudioControls = ({ audioRef, onToggle, isFullscreen, autoplayBlocke
     const mins = Math.floor(time / 60);
     const secs = Math.floor(time % 60).toString().padStart(2, "0");
     return `${mins}:${secs}`;
+  };
+
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!audioRef.current) return;
+
+    const time = Number(e.target.value);
+
+    audioRef.current.currentTime = time;
   };
 
   useEffect(() => {
@@ -60,12 +68,7 @@ export const AudioControls = ({ audioRef, onToggle, isFullscreen, autoplayBlocke
         max={duration}
         step={0.1}
         value={currentTime}
-        onChange={(e) => {
-          if (audioRef.current) {
-            audioRef.current.currentTime = parseFloat(e.target.value);
-            setCurrentTime(parseFloat(e.target.value));
-          }
-        }}
+        onInput={handleSeek}
         className="w-full accent-violet-500"
       />
       <span className="text-white font-mono text-sm min-w-11.25">
