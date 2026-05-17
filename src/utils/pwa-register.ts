@@ -36,7 +36,6 @@ export const setupPWA = () => {
       const check = () => {
         if (navigator.onLine && document.visibilityState === 'visible') {
           registration.update().catch(() => {});
-          console.log('Checked for updates');
         }
       };
 
